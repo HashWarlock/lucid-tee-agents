@@ -13,3 +13,4 @@ old/*
 # Build outputs
 dist/
 */dist/
+*.tsbuildinfo
