@@ -54,6 +54,7 @@ addEntrypoint({
   input: z.object({
     text: z.string().min(1, "Please provide some text."),
   }),
+  // Price is configured globally via DEFAULT_PRICE environment variable
   handler: async ({ input }) => {
     return {
       output: {
