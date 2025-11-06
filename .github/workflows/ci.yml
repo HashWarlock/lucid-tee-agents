@@ -44,9 +44,9 @@ jobs:
           bun x tsc -p packages/create-agent-kit/tsconfig.json --noEmit
           bun x tsc --build packages/agent-kit/tsconfig.json
           bun x tsc -p packages/agent-kit/tsconfig.json --noEmit
-      
+
       - name: Build packages
         run: bun run build:packages
-      
+
       - name: Test packages
         run: bun test
