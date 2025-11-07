@@ -1,5 +1,13 @@
 # @lucid-agents/agent-kit
 
+## 1.1.2
+
+### Patch Changes
+
+- fixed 8004 agent metadata generation
+- Updated dependencies
+  - @lucid-agents/agent-kit-identity@1.1.2
+
 ## 1.1.1
 
 ### Patch Changes

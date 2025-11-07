@@ -1,5 +1,11 @@
 # @lucid-agents/create-agent-kit
 
+## 1.1.2
+
+### Patch Changes
+
+- fixed 8004 agent metadata generation
+
 ## 1.1.1
 
 ### Patch Changes
