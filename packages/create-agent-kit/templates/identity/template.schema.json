@@ -62,10 +62,9 @@
       "examples": ["84532", "8453", "1"]
     },
     "IDENTITY_AUTO_REGISTER": {
-      "type": "string",
-      "description": "Auto-register agent on ERC-8004 identity registry at startup (true/false)",
-      "default": "true",
-      "enum": ["true", "false"]
+      "type": "boolean",
+      "description": "Auto-register agent on ERC-8004 identity registry at startup",
+      "default": true
     },
     "PRIVATE_KEY": {
       "type": "string",

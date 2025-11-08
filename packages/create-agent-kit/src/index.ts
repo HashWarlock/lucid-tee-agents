@@ -857,8 +857,10 @@ async function setupEnvironment(params: {
     // Fall back to default value if not present
     const answer = wizardAnswers.get(prompt.key);
     const value = answer !== undefined ? answer : prompt.defaultValue;
+    // Convert to string, handling boolean false correctly
+    const stringValue = value == null ? "" : String(value);
 
-    lines.push(`${prompt.key}=${value || ""}`);
+    lines.push(`${prompt.key}=${stringValue}`);
   }
 
   await fs.writeFile(envPath, lines.join("\n") + "\n", "utf8");

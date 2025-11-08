@@ -47,7 +47,7 @@ This template accepts the following configuration arguments (see `template.schem
 - `PAYMENTS_DEFAULT_PRICE` - Default price in base units
 - `RPC_URL` - Blockchain RPC endpoint (e.g., "https://sepolia.base.org")
 - `CHAIN_ID` - Chain ID (e.g., "84532" for Base Sepolia)
-- `IDENTITY_AUTO_REGISTER` - Auto-register on ERC-8004 registry ("true"/"false")
+- `IDENTITY_AUTO_REGISTER` - Auto-register on ERC-8004 registry (boolean: true/false)
 - `PRIVATE_KEY` - Wallet private key (required for on-chain operations)
 
 ## What is ERC-8004?
@@ -334,7 +334,7 @@ RPC_URL=https://sepolia.base.org
 CHAIN_ID=84532
 PRIVATE_KEY=0x...  # Required for on-chain operations
 
-# Identity configuration
+# Identity configuration (boolean: true or false)
 IDENTITY_AUTO_REGISTER=true
 
 # Payment configuration

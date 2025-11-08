@@ -542,4 +542,108 @@ describe("create-agent-kit CLI", () => {
     // Should NOT have template.json (it's an artifact)
     expect(files).not.toContain("template.json");
   });
+
+  it("handles boolean false values correctly (not converting to empty string)", async () => {
+    const cwd = await createTempDir();
+    const { logger } = createLogger();
+
+    await runCli([
+      "bool-test-agent",
+      "--template=identity",
+      "--non-interactive",
+      "--IDENTITY_AUTO_REGISTER=false",
+    ], {
+      cwd,
+      logger,
+    });
+
+    const projectDir = join(cwd, "bool-test-agent");
+    const envFile = await readFile(join(projectDir, ".env"), "utf8");
+
+    // Critical: false should be "false", not empty string
+    expect(envFile).toContain("IDENTITY_AUTO_REGISTER=false");
+    expect(envFile).not.toContain("IDENTITY_AUTO_REGISTER=\n");
+    
+    // Also verify it's not the default (true)
+    expect(envFile).not.toContain("IDENTITY_AUTO_REGISTER=true");
+  });
+
+  it("handles boolean true values correctly", async () => {
+    const cwd = await createTempDir();
+    const { logger } = createLogger();
+
+    await runCli([
+      "bool-true-agent",
+      "--template=identity",
+      "--non-interactive",
+      "--IDENTITY_AUTO_REGISTER=true",
+    ], {
+      cwd,
+      logger,
+    });
+
+    const projectDir = join(cwd, "bool-true-agent");
+    const envFile = await readFile(join(projectDir, ".env"), "utf8");
+
+    expect(envFile).toContain("IDENTITY_AUTO_REGISTER=true");
+  });
+
+  it("handles actual boolean types from confirm questions correctly", async () => {
+    const cwd = await createTempDir();
+    const templateRoot = await createTemplateRoot(["test-confirm"]);
+    const { logger } = createLogger();
+
+    // Create a template with a confirm-type question
+    const templatePath = join(templateRoot, "test-confirm");
+    const templateJson = await readJson(join(templatePath, "template.json"));
+    templateJson.wizard = {
+      prompts: [
+        {
+          key: "ENABLE_FEATURE",
+          type: "confirm",
+          message: "Enable feature?",
+          defaultValue: true,
+        },
+        {
+          key: "ANOTHER_FEATURE",
+          type: "confirm",
+          message: "Another feature?",
+          defaultValue: false,
+        },
+      ],
+    };
+    await writeFile(
+      join(templatePath, "template.json"),
+      JSON.stringify(templateJson, null, 2),
+      "utf8"
+    );
+
+    // Test with boolean false via wizard (simulates what happens with confirm types)
+    const prompt: PromptApi = {
+      select: async ({ choices }) => choices[0]?.value ?? "",
+      confirm: async ({ message }) => {
+        if (message === "Enable feature?") return true;
+        if (message === "Another feature?") return false;
+        return false;
+      },
+      input: async ({ defaultValue = "" }) => defaultValue,
+    };
+
+    await runCli(["confirm-agent"], {
+      cwd,
+      logger,
+      templateRoot,
+      prompt,
+    });
+
+    const projectDir = join(cwd, "confirm-agent");
+    const envFile = await readFile(join(projectDir, ".env"), "utf8");
+
+    // Boolean true should be "true"
+    expect(envFile).toContain("ENABLE_FEATURE=true");
+    
+    // Boolean false should be "false", NOT empty string
+    expect(envFile).toContain("ANOTHER_FEATURE=false");
+    expect(envFile).not.toMatch(/ANOTHER_FEATURE=\s*\n/);
+  });
 });
