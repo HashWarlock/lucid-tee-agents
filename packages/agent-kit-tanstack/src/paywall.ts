@@ -6,6 +6,7 @@ import type {
 import {
   resolveEntrypointPrice,
   toJsonSchemaOrUndefined,
+  validatePaymentsConfig,
 } from "@lucid-agents/agent-kit";
 import type {
   FacilitatorConfig,
@@ -68,6 +69,9 @@ function buildEntrypointRoutes({
     if (kind === "stream" && !entrypoint.stream) continue;
     const network = entrypoint.network ?? payments.network;
     const price = resolveEntrypointPrice(entrypoint, payments, kind);
+
+    validatePaymentsConfig(payments, network, entrypoint.key);
+
     if (!network || !price) continue;
 
     const requestSchema = toJsonSchemaOrUndefined(entrypoint.input);
