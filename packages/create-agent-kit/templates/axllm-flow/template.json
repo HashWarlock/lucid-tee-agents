@@ -2,7 +2,7 @@
   "id": "axllm-flow",
   "name": "AxLLM Flow Agent",
   "description": "Agent with AxFlow integration for multi-step workflows.",
-  "adapters": ["hono", "tanstack"],
+  "adapters": ["hono", "tanstack-ui", "tanstack-headless"],
   "package": {
     "dependencies": {}
   },
