@@ -16,9 +16,9 @@ export const config = {
   matcher: paywall.matcher.length > 0 ? paywall.matcher : FALLBACK_MATCHER,
 };
 
-export const middleware = (request: NextRequest) => {
+export function proxy(request: NextRequest) {
   if (paywall.middleware) {
     return paywall.middleware(request);
   }
   return NextResponse.next();
-};
+}

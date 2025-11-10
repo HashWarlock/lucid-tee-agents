@@ -119,8 +119,7 @@ export { agent, handlers, runtime };`,
     filesDir: join(ADAPTER_FILES_ROOT, 'next'),
     placeholderTargets: ['lib/agent.ts.template'],
     snippets: {
-      imports: `import { createAgentHttpRuntime } from "@lucid-agents/agent-kit";
-import { z } from "zod";`,
+      imports: `import { createAgentHttpRuntime } from "@lucid-agents/agent-kit";`,
       preSetup: ``,
       appCreation: `const runtime = createAgentHttpRuntime(
   {

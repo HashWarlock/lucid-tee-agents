@@ -125,7 +125,10 @@ describe('create-agent-kit CLI', () => {
     const projectDir = join(cwd, 'demo-agent');
     const pkg = await readJson(join(projectDir, 'package.json'));
     const readme = await readFile(join(projectDir, 'README.md'), 'utf8');
-    const agentSrc = await readFile(join(projectDir, 'lib/agent.ts'), 'utf8');
+    const agentSrc = await readFile(
+      join(projectDir, 'src/lib/agent.ts'),
+      'utf8'
+    );
     const envFile = await readFile(join(projectDir, '.env'), 'utf8');
 
     expect(pkg.name).toBe('demo-agent');
@@ -252,21 +255,15 @@ describe('create-agent-kit CLI', () => {
     });
 
     const projectDir = join(cwd, 'demo-agent');
-    const agentSrc = await readFile(
-      join(projectDir, 'src/lib/agent.ts'),
-      'utf8'
-    );
-    const middlewareSrc = await readFile(
-      join(projectDir, 'middleware.ts'),
-      'utf8'
-    );
+    const agentSrc = await readFile(join(projectDir, 'lib/agent.ts'), 'utf8');
+    const proxySrc = await readFile(join(projectDir, 'proxy.ts'), 'utf8');
     const pkg = (await readJson(join(projectDir, 'package.json'))) as Record<
       string,
       any
     >;
 
     expect(agentSrc).toContain('createAgentHttpRuntime');
-    expect(middlewareSrc).toContain('createNextPaywall');
+    expect(proxySrc).toContain('createNextPaywall');
     expect(pkg.dependencies?.next).toBeDefined();
     expect(pkg.dependencies?.['x402-next']).toBeDefined();
   });

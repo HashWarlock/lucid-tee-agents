@@ -12,7 +12,7 @@ This adapter scaffolds a full-stack Next.js agent shell with:
 
 - `lib/agent.ts` – Generated at scaffold time with your entrypoints
 - `app/api/agent/*` – HTTP endpoints backed by agent runtime handlers
-- `middleware.ts` – x402 paywall powered by `x402-next`
+- `proxy.ts` – x402 paywall powered by `x402-next`
 - `components/dashboard.tsx` – Client dashboard for testing entrypoints
 - `lib/paywall.ts` – Builds dynamic route pricing for the middleware
 
