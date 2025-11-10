@@ -1,8 +1,9 @@
 import { headers } from 'next/headers';
 
 import Dashboard from '@/components/dashboard';
-import { agent, runtime } from '@/lib/agent';
+import { agent, handlers, runtime } from '@/lib/agent';
 import type { DashboardData } from '@/lib/dashboard-types';
+import type { AgentHealth } from '@/lib/api';
 
 const BASE_PATH = '/api/agent';
 
@@ -14,15 +15,43 @@ function ensureSerializable<T>(value: T): T {
   }
 }
 
-function getRequestOrigin(): string {
-  const headerMap = headers();
+async function getRequestOrigin(): Promise<string> {
+  const headerMap = await headers();
   const proto = headerMap.get('x-forwarded-proto') ?? 'http';
   const host = headerMap.get('host') ?? 'localhost:3000';
   return `${proto}://${host}`;
 }
 
-async function loadDashboardData(origin: string): Promise<DashboardData> {
-  const manifest = agent.resolveManifest(origin, BASE_PATH);
+type DashboardPayload = {
+  dashboard: DashboardData;
+  manifestText: string;
+  origin: string;
+};
+
+function normalizeOrigin(value: unknown): string {
+  if (typeof value === 'string' && value.length > 0) {
+    return value;
+  }
+  if (value instanceof URL) {
+    return value.origin;
+  }
+  if (value && typeof value === 'object') {
+    const originProp = (value as { origin?: unknown }).origin;
+    if (typeof originProp === 'string' && originProp.length > 0) {
+      return originProp;
+    }
+    if (originProp instanceof URL) {
+      return originProp.origin;
+    }
+  }
+  return 'http://localhost:3000';
+}
+
+async function loadDashboardPayload(origin: string): Promise<DashboardPayload> {
+  const resolvedOrigin = normalizeOrigin(origin);
+  const manifest = ensureSerializable(
+    agent.resolveManifest(resolvedOrigin, BASE_PATH)
+  );
   const manifestEntrypoints = manifest.entrypoints || [];
 
   const rawEntrypoints = agent.listEntrypoints();
@@ -73,11 +102,49 @@ async function loadDashboardData(origin: string): Promise<DashboardData> {
       }
     : null;
 
-  return ensureSerializable({ meta, payments, entrypoints });
+  return {
+    dashboard: ensureSerializable({ meta, payments, entrypoints }),
+    manifestText: JSON.stringify(manifest, null, 2),
+    origin: resolvedOrigin,
+  };
+}
+
+async function loadInitialHealth(): Promise<AgentHealth | null> {
+  if (!handlers.health) return null;
+  try {
+    const response = await handlers.health(
+      new Request('http://agent.local/api/agent/health')
+    );
+    const payload = await response.json();
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+    return {
+      ...(payload as AgentHealth),
+      timestamp:
+        typeof (payload as AgentHealth).timestamp === 'string'
+          ? (payload as AgentHealth).timestamp
+          : new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export default async function Page() {
-  const origin = getRequestOrigin();
-  const dashboard = await loadDashboardData(origin);
-  return <Dashboard initialData={dashboard} />;
+  const origin = await getRequestOrigin();
+  const [{ dashboard, manifestText, origin: resolvedOrigin }, initialHealth] =
+    await Promise.all([
+      loadDashboardPayload(origin),
+      loadInitialHealth(),
+    ]);
+
+  return (
+    <Dashboard
+      initialData={dashboard}
+      origin={resolvedOrigin}
+      manifestText={manifestText}
+      initialHealth={initialHealth}
+    />
+  );
 }

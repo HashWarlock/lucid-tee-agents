@@ -5,7 +5,7 @@ import { runtime } from '@/lib/agent';
 import { createNextPaywall } from '@/lib/paywall';
 
 const PAYWALL_BASE_PATH = '/api/agent';
-const FALLBACK_MATCHER = ['/__noop-paywall'];
+const ROUTE_MATCHER = ['/api/agent/entrypoints/:path*'];
 
 const paywall = createNextPaywall({
   runtime,
@@ -13,7 +13,7 @@ const paywall = createNextPaywall({
 });
 
 export const config = {
-  matcher: paywall.matcher.length > 0 ? paywall.matcher : FALLBACK_MATCHER,
+  matcher: ['/api/agent/entrypoints/:path*'],
 };
 
 export function proxy(request: NextRequest) {

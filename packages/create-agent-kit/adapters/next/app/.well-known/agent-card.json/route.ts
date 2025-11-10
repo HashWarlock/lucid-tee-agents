@@ -1,9 +1,18 @@
+import { unstable_cache } from 'next/cache';
 import type { NextRequest } from 'next/server';
 
 import { agent } from '@/lib/agent';
 
+const getCachedManifest = unstable_cache(
+  async (origin: string) => agent.resolveManifest(origin, '/api/agent'),
+  ['agent-manifest'],
+  { revalidate: 300, tags: ['agent-manifest'] }
+);
+
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
-  const manifest = agent.resolveManifest(origin, '/api/agent');
-  return Response.json(manifest);
+  const manifest = await getCachedManifest(origin);
+  return Response.json(manifest, {
+    headers: { 'Cache-Control': 's-maxage=300' },
+  });
 }

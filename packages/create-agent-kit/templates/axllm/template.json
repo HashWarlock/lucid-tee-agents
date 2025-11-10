@@ -42,7 +42,7 @@
         "key": "PAYMENTS_DEFAULT_PRICE",
         "type": "input",
         "message": "Default price in base units",
-        "defaultValue": "1000"
+        "defaultValue": "1"
       },
       {
         "key": "PRIVATE_KEY",
