@@ -125,10 +125,7 @@ describe('create-agent-kit CLI', () => {
     const projectDir = join(cwd, 'demo-agent');
     const pkg = await readJson(join(projectDir, 'package.json'));
     const readme = await readFile(join(projectDir, 'README.md'), 'utf8');
-    const agentSrc = await readFile(
-      join(projectDir, 'src/lib/agent.ts'),
-      'utf8'
-    );
+    const agentSrc = await readFile(join(projectDir, 'lib/agent.ts'), 'utf8');
     const envFile = await readFile(join(projectDir, '.env'), 'utf8');
 
     expect(pkg.name).toBe('demo-agent');
@@ -241,6 +238,37 @@ describe('create-agent-kit CLI', () => {
         '@lucid-agents/agent-kit-tanstack'
       )
     ).toBe(true);
+  });
+
+  it('scaffolds projects with the Next.js adapter', async () => {
+    const cwd = await createTempDir();
+    const templateRoot = await createTemplateRoot(['blank']);
+    const { logger } = createLogger();
+
+    await runCli(['demo-agent', '--adapter=next', '--wizard=no'], {
+      cwd,
+      logger,
+      templateRoot,
+    });
+
+    const projectDir = join(cwd, 'demo-agent');
+    const agentSrc = await readFile(
+      join(projectDir, 'src/lib/agent.ts'),
+      'utf8'
+    );
+    const middlewareSrc = await readFile(
+      join(projectDir, 'middleware.ts'),
+      'utf8'
+    );
+    const pkg = (await readJson(join(projectDir, 'package.json'))) as Record<
+      string,
+      any
+    >;
+
+    expect(agentSrc).toContain('createAgentHttpRuntime');
+    expect(middlewareSrc).toContain('createNextPaywall');
+    expect(pkg.dependencies?.next).toBeDefined();
+    expect(pkg.dependencies?.['x402-next']).toBeDefined();
   });
 
   it('generates tanstack projects without leftover template tokens', async () => {

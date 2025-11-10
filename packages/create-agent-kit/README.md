@@ -88,6 +88,7 @@ For example, the TanStack adapter ships two variants:
 
 - `--adapter=tanstack` (default) – copies the full UI shell from `adapters/tanstack/ui`
 - `--adapter=tanstack --adapter-ui=headless` – copies the API-only variant from `adapters/tanstack/headless`
+- `--adapter=next` – Next.js App Router shell with x402-next middleware and the dashboard UI
 
 This keeps the runtime skeleton in one place while templates focus on agent behaviour.
 
