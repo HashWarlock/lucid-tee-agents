@@ -16,6 +16,7 @@
       "@lucid-agents/agent-core": ["./agent-core/src"],
       "@lucid-agents/agent-kit": ["./agent-kit/src"],
       "@lucid-agents/agent-kit-hono": ["./agent-kit-hono/src"],
+      "@lucid-agents/agent-kit-express": ["./agent-kit-express/src"],
       "@lucid-agents/agent-kit-tanstack": ["./agent-kit-tanstack/src"],
       "@lucid-agents/agent-kit-identity": ["./agent-kit-identity/src"],
       "@lucid-agents/create-agent-kit": ["./create-agent-kit/src"]

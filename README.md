@@ -10,7 +10,7 @@ Build, ship, and monetize AI agents with a consistent surface across runtimes. T
 
 ## Key Packages
 
-- [`@lucid-agents/agent-kit`](packages/agent-kit/README.md) — Hono wrapper that registers entrypoints, serves manifests, manages payments, and exposes trust metadata utilities.
+- [`@lucid-agents/agent-kit`](packages/agent-kit/README.md) — Core runtime that registers entrypoints, serves manifests, manages payments, and exposes trust metadata utilities. It powers the Hono, Express, TanStack, and Next.js adapters.
 - [`@lucid-agents/create-agent-kit`](packages/create-agent-kit/README.md) — CLI scaffolding tool to generate new agent projects with templates, environment setup, and optional dependency installation.
 - [`@lucid-agents/agent-kit-identity`](packages/agent-kit-identity/README.md) — ERC-8004 toolkit for registering agents, generating trust configs, and working with reputation/validation registries.
 
@@ -26,7 +26,7 @@ Each package README contains API details, environment variables, and complete ex
 
 ```ts
 import { z } from "zod";
-import { createAgentApp } from "@lucid-agents/agent-kit";
+import { createAgentApp } from "@lucid-agents/agent-kit-express";
 import {
   createAgentIdentity,
   getTrustConfig,
@@ -57,7 +57,10 @@ addEntrypoint({
   },
 });
 
-export default app;
+const port = Number(process.env.PORT ?? 3000);
+app.listen(port, () => {
+  console.log(`agent listening on http://localhost:${port}`);
+});
 ```
 
 This pair wires together the agent runtime and ERC-8004 trust metadata in just a few lines. Dive deeper in the package READMEs linked above.

@@ -72,6 +72,7 @@ async function buildPackages() {
     "@lucid-agents/agent-kit-identity",
     "@lucid-agents/agent-kit",
     "@lucid-agents/agent-kit-hono",
+    "@lucid-agents/agent-kit-express",
     "@lucid-agents/agent-kit-tanstack",
     "@lucid-agents/create-agent-kit",
   ];

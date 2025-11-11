@@ -1,8 +1,8 @@
 # @lucid-agents/agent-kit
 
-`@lucid-agents/agent-kit` is the core runtime for building AI agents with typed entrypoints, discovery endpoints, monetization hooks, and trust metadata. It provides the shared runtime logic used by adapter packages like `@lucid-agents/agent-kit-hono` and `@lucid-agents/agent-kit-tanstack`.
+`@lucid-agents/agent-kit` is the core runtime for building AI agents with typed entrypoints, discovery endpoints, monetization hooks, and trust metadata. It powers the Hono, Express, and TanStack adapter packages that expose framework-specific server scaffolding.
 
-**Note:** For most use cases, you'll want to use one of the adapter packages (`agent-kit-hono` or `agent-kit-tanstack`) rather than importing from this core package directly.
+**Note:** For most use cases, you'll want to use one of the adapter packages (`agent-kit-hono`, `agent-kit-express`, or `agent-kit-tanstack`) rather than importing from this core package directly.
 
 ## Highlights
 
@@ -22,6 +22,13 @@ This is the core runtime package. For building agents, use one of the adapter pa
 
 ```ts
 import { createAgentApp } from '@lucid-agents/agent-kit-hono';
+import type { EntrypointDef, AgentMeta } from '@lucid-agents/agent-kit/types';
+```
+
+**Express Adapter:**
+
+```ts
+import { createAgentApp } from '@lucid-agents/agent-kit-express';
 import type { EntrypointDef, AgentMeta } from '@lucid-agents/agent-kit/types';
 ```
 
@@ -55,7 +62,7 @@ The runtime manages:
 
 The return value exposes:
 
-- `app` — the underlying Hono instance you can serve with Bun, Cloudflare Workers, etc.
+- `app` — the underlying server instance (Hono or Express) you can serve with Bun/Node platforms.
 - `addEntrypoint(def)` — register more entrypoints at runtime.
 - `config` — the resolved `ResolvedAgentKitConfig` after env and runtime overrides.
 - `payments` — the active `PaymentsConfig` (if paywalling is enabled) or `undefined`.
@@ -85,6 +92,33 @@ addEntrypoint({
 });
 
 export default app;
+```
+
+**Example with Express Adapter:**
+
+```ts
+import { z } from 'zod';
+import { createAgentApp } from '@lucid-agents/agent-kit-express';
+
+const { app, addEntrypoint } = createAgentApp({
+  name: 'hello-agent',
+  version: '0.1.0',
+  description: 'Echoes whatever you pass in',
+});
+
+addEntrypoint({
+  key: 'echo',
+  description: 'Echo a message',
+  input: z.object({ text: z.string() }),
+  async handler({ input }) {
+    return {
+      output: { text: String(input.text ?? '') },
+      usage: { total_tokens: String(input.text ?? '').length },
+    };
+  },
+});
+
+app.listen(process.env.PORT ?? 3000);
 ```
 
 **Example with TanStack Adapter:**
