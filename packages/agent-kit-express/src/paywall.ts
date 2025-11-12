@@ -93,6 +93,17 @@ export function withPayments({
     resolvedFacilitator
   ) as unknown as RequestHandler;
 
-  app.use(path, middleware);
+  app.use((req, res, next) => {
+    const reqPath = req.path ?? req.url ?? '';
+    if (
+      reqPath === path ||
+      reqPath.startsWith(`${path}/`) ||
+      req.originalUrl === path ||
+      req.originalUrl?.startsWith(`${path}?`)
+    ) {
+      return middleware(req, res, next);
+    }
+    return next();
+  });
   return true;
 }

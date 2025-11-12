@@ -22,7 +22,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && tsc --project tsconfig.json --emitDeclarationOnly",
+    "build": "tsup",
     "clean": "rm -rf dist",
     "prepare": "bun run build"
   },
