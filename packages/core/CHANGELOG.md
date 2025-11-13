@@ -1,5 +1,71 @@
 # @lucid-agents/core
 
+## 1.5.1
+
+### Patch Changes
+
+- 2428d81: **BREAKING**: Remove `useConfigPayments` and `defaultPrice` - fully explicit payment configuration
+
+  Two breaking changes for clearer, more explicit payment handling:
+  1. **Removed `useConfigPayments` option** - No more automatic payment application
+  2. **Removed `defaultPrice` from PaymentsConfig** - Each paid entrypoint must specify its own price
+
+  **Migration:**
+
+  Before:
+
+  ```typescript
+  createAgentApp(meta, {
+    config: {
+      payments: {
+        facilitatorUrl: '...',
+        payTo: '0x...',
+        network: 'base-sepolia',
+        defaultPrice: '1000', //  Removed
+      }
+    },
+    useConfigPayments: true, //  Removed
+  });
+
+  addEntrypoint({
+    key: 'analyze',
+    // Inherited defaultPrice
+    handler: ...
+  });
+  ```
+
+  After:
+
+  ```typescript
+  const DEFAULT_PRICE = '1000'; // Optional: define your own constant
+
+  createAgentApp(meta, {
+    payments: {
+      facilitatorUrl: '...',
+      payTo: '0x...',
+      network: 'base-sepolia',
+      //  No defaultPrice
+    }
+  });
+
+  addEntrypoint({
+    key: 'analyze',
+    price: DEFAULT_PRICE, //  Explicit per entrypoint
+    handler: ...
+  });
+  ```
+
+  **Benefits:**
+  - **Fully explicit**: Every paid entrypoint has a visible price
+  - **No magic defaults**: What you see is what you get
+  - **Simpler types**: `PaymentsConfig` only has essential fields
+  - **Developer friendly**: Easy to define your own constants if needed
+
+- Updated dependencies [2428d81]
+  - @lucid-agents/types@1.1.1
+  - @lucid-agents/payments@1.5.1
+  - @lucid-agents/identity@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes
