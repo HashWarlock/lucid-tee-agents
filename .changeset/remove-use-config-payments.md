@@ -24,10 +24,10 @@ createAgentApp(meta, {
       facilitatorUrl: '...',
       payTo: '0x...',
       network: 'base-sepolia',
-      defaultPrice: '1000', // ❌ Removed
+      defaultPrice: '1000', //  Removed
     }
   },
-  useConfigPayments: true, // ❌ Removed
+  useConfigPayments: true, //  Removed
 });
 
 addEntrypoint({
@@ -46,13 +46,13 @@ createAgentApp(meta, {
     facilitatorUrl: '...',
     payTo: '0x...',
     network: 'base-sepolia',
-    // ✅ No defaultPrice
+    //  No defaultPrice
   }
 });
 
 addEntrypoint({
   key: 'analyze',
-  price: DEFAULT_PRICE, // ✅ Explicit per entrypoint
+  price: DEFAULT_PRICE, //  Explicit per entrypoint
   handler: ...
 });
 ```
