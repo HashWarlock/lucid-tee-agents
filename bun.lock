@@ -26,7 +26,7 @@
       "name": "@lucid-agents/cli",
       "version": "1.4.2",
       "bin": {
-        "lucid-agent": "dist/index.js",
+        "create-agent-kit": "dist/index.js",
       },
       "devDependencies": {
         "@lucid-agents/eslint-config": "workspace:*",
