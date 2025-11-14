@@ -2,11 +2,8 @@ import type { Express, RequestHandler } from 'express';
 import { paymentMiddleware } from 'x402-express';
 import type { FacilitatorConfig } from 'x402/types';
 import type { EntrypointDef, PaymentsConfig } from '@lucid-agents/types';
-import {
-  resolvePrice,
-  validatePaymentsConfig,
-} from '@lucid-agents/payments';
-import { toJsonSchemaOrUndefined } from './utils';
+import { resolvePrice, validatePaymentsConfig } from '@lucid-agents/payments';
+import { toJsonSchemaOrUndefined } from '@lucid-agents/core/utils';
 
 type PaymentMiddlewareFactory = typeof paymentMiddleware;
 
