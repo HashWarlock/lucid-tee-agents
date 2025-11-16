@@ -1,5 +1,5 @@
 import type { RegistrationEntry, TrustModel } from '@lucid-agents/identity';
-import type { SolanaAddress } from '@lucid-agents/types';
+import type { SolanaAddress } from '@lucid-agents/types/payments';
 import type { Network, Resource } from 'x402/types';
 
 import type { AP2ExtensionDescriptor, AP2Role } from './ap2';

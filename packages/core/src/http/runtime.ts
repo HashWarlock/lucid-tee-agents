@@ -2,19 +2,15 @@ import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 
 import type { TrustConfig } from '@lucid-agents/identity';
-import type { PaymentRequirement } from '@lucid-agents/payments';
+import type { RuntimePaymentRequirement } from '@lucid-agents/payments';
 import {
-  paymentRequiredResponse,
-  resolvePaymentRequirement,
+  evaluatePaymentRequirement as evaluatePaymentRequirementFromPayments,
+  resolveActivePayments,
 } from '@lucid-agents/payments';
-import type { PaymentsConfig } from '@lucid-agents/types';
+import type { AgentKitConfig } from '@lucid-agents/types/core';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 
-import {
-  type AgentKitConfig,
-  getAgentKitConfig,
-  type ResolvedAgentKitConfig,
-  setActiveInstanceConfig,
-} from '../config/config';
+import { getAgentKitConfig, setActiveInstanceConfig } from '../config/config';
 import {
   type AgentCore,
   createAgentCore,
@@ -51,15 +47,9 @@ export type AgentHttpHandlers = {
   stream: (req: Request, params: { key: string }) => Promise<Response>;
 };
 
-export type RuntimePaymentRequirement =
-  | { required: false }
-  | (Extract<PaymentRequirement, { required: true }> & {
-      response: Response;
-    });
-
 export type AgentHttpRuntime = {
   agent: AgentCore;
-  config: ResolvedAgentKitConfig;
+  config: AgentKitConfig;
   payments: PaymentsConfig | undefined;
   handlers: AgentHttpHandlers;
   addEntrypoint: (def: EntrypointDef) => void;
@@ -121,27 +111,6 @@ const extractInput = (payload: unknown): unknown => {
   return {};
 };
 
-const entrypointHasExplicitPrice = (entrypoint: EntrypointDef): boolean => {
-  const { price } = entrypoint;
-  if (typeof price === 'string') {
-    return price.trim().length > 0;
-  }
-  if (price && typeof price === 'object') {
-    const hasInvoke = price.invoke;
-    const hasStream = price.stream;
-    const invokeDefined =
-      typeof hasInvoke === 'string'
-        ? hasInvoke.trim().length > 0
-        : hasInvoke !== undefined;
-    const streamDefined =
-      typeof hasStream === 'string'
-        ? hasStream.trim().length > 0
-        : hasStream !== undefined;
-    return invokeDefined || streamDefined;
-  }
-  return false;
-};
-
 const resolveFaviconSvg = (meta: AgentMeta): string => {
   const defaultFaviconSvg = `
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -161,13 +130,13 @@ export function createAgentHttpRuntime(
   opts: CreateAgentHttpOptions = {}
 ): AgentHttpRuntime {
   setActiveInstanceConfig(opts?.config);
-  const resolvedConfig: ResolvedAgentKitConfig = getAgentKitConfig(
-    opts?.config
-  );
+  const resolvedConfig: AgentKitConfig = getAgentKitConfig(opts?.config);
 
   const paymentsOption = opts?.payments;
   const resolvedPayments: PaymentsConfig | undefined =
-    paymentsOption === false ? undefined : paymentsOption;
+    paymentsOption === false
+      ? undefined
+      : (paymentsOption ?? resolvedConfig.payments);
 
   let activePayments: PaymentsConfig | undefined = resolvedPayments;
 
@@ -212,17 +181,6 @@ export function createAgentHttpRuntime(
 
   const invalidateManifestCache = () => {
     manifestCache.clear();
-  };
-
-  const ensureActivePaymentsForEntrypoint = (entrypoint: EntrypointDef) => {
-    if (activePayments || paymentsOption === false) return;
-    if (!entrypointHasExplicitPrice(entrypoint)) return;
-    activePayments = {
-      payTo: resolvedConfig.payments.payTo,
-      facilitatorUrl: resolvedConfig.payments.facilitatorUrl,
-      network: resolvedConfig.payments.network,
-    };
-    agent.config.payments = activePayments ?? undefined;
   };
 
   const faviconSvg = resolveFaviconSvg(meta);
@@ -504,9 +462,17 @@ export function createAgentHttpRuntime(
 
   const addEntrypoint = (def: EntrypointDef) => {
     if (!def.key) throw new Error('entrypoint.key required');
-    ensureActivePaymentsForEntrypoint(def);
-    agent.config.payments =
-      paymentsOption === false ? false : (activePayments ?? undefined);
+    const newActivePayments = resolveActivePayments(
+      def,
+      paymentsOption,
+      resolvedPayments,
+      activePayments
+    );
+    if (newActivePayments !== activePayments) {
+      activePayments = newActivePayments;
+      agent.config.payments =
+        paymentsOption === false ? false : (activePayments ?? undefined);
+    }
     agent.addEntrypoint(def);
     invalidateManifestCache();
   };
@@ -527,23 +493,11 @@ export function createAgentHttpRuntime(
     buildManifestForOrigin,
     invalidateManifestCache,
     evaluatePaymentRequirement: (entrypoint, kind) => {
-      const requirement = resolvePaymentRequirement(
+      return evaluatePaymentRequirementFromPayments(
         entrypoint,
         kind,
         activePayments
       );
-      if (requirement.required) {
-        const requiredRequirement = requirement as Extract<
-          PaymentRequirement,
-          { required: true }
-        >;
-        const enriched: RuntimePaymentRequirement = {
-          ...requiredRequirement,
-          response: paymentRequiredResponse(requiredRequirement),
-        };
-        return enriched;
-      }
-      return requirement as RuntimePaymentRequirement;
     },
     get payments() {
       return activePayments;

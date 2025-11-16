@@ -1,6 +1,6 @@
 import type { TrustConfig } from '@lucid-agents/identity';
 import { resolvePrice } from '@lucid-agents/payments';
-import type { PaymentsConfig } from '@lucid-agents/types';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 
 import type { AgentMeta } from '../core/types';
 import type { EntrypointDef } from '../http/types';

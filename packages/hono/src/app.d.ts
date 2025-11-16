@@ -17,5 +17,5 @@ export declare function createAgentApp(meta: AgentMeta, opts?: CreateAgentAppOpt
     app: Hono<import("hono/types").BlankEnv, import("hono/types").BlankSchema, "/">;
     agent: import("@lucid-agents/agent-core").AgentCore;
     addEntrypoint: (def: EntrypointDef) => void;
-    config: import("@lucid-agents/core").ResolvedAgentKitConfig;
+    config: import("@lucid-agents/core").AgentKitConfig;
 };

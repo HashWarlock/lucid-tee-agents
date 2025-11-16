@@ -1,7 +1,8 @@
 import type { AgentHttpRuntime } from '@lucid-agents/core';
 import { toJsonSchemaOrUndefined } from '@lucid-agents/core';
 import { resolvePrice, validatePaymentsConfig } from '@lucid-agents/payments';
-import type { EntrypointDef, PaymentsConfig } from '@lucid-agents/types';
+import type { EntrypointDef } from '@lucid-agents/types/core';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import type {
   FacilitatorConfig,
   PaywallConfig,

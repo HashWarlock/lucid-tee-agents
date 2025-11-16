@@ -20,14 +20,13 @@ export type {
 
 // Config management
 export {
-  type AgentKitConfig,
   configureAgentKit,
   getActiveInstanceConfig,
   getAgentKitConfig,
   resetAgentKitConfigForTesting,
-  type ResolvedAgentKitConfig,
   setActiveInstanceConfig,
 } from './config/config';
+export type { AgentKitConfig } from '@lucid-agents/types/core';
 
 // HTTP runtime
 export {
@@ -35,7 +34,6 @@ export {
   type AgentHttpRuntime,
   type CreateAgentHttpOptions,
   createAgentHttpRuntime,
-  type RuntimePaymentRequirement,
 } from './http/runtime';
 export {
   createSSEStream,

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import type { AgentMeta, EntrypointDef } from '@lucid-agents/types';
+import type { AgentMeta, EntrypointDef } from '@lucid-agents/types/core';
 import { withPayments } from './paywall';
 import {
   createAgentHttpRuntime,

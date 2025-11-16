@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import type { PaymentsConfig } from '@lucid-agents/types';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { createTanStackPaywall } from '../paywall';
 import type { RoutesConfig } from 'x402/types';
 import type { TanStackRequestMiddleware } from '@lucid-agents/x402-tanstack-start';

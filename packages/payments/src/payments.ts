@@ -1,5 +1,7 @@
 import type { Network } from 'x402/types';
-import type { EntrypointDef, PaymentsConfig } from '@lucid-agents/types';
+import type { EntrypointDef } from '@lucid-agents/types/core';
+import type { EntrypointPrice } from '@lucid-agents/types/payments';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { resolvePrice } from './pricing';
 
 export type PaymentRequirement =
@@ -11,6 +13,102 @@ export type PaymentRequirement =
       network: Network;
       facilitatorUrl?: string;
     };
+
+/**
+ * HTTP-specific payment requirement that includes the Response object.
+ */
+export type RuntimePaymentRequirement =
+  | { required: false }
+  | (Extract<PaymentRequirement, { required: true }> & {
+      response: Response;
+    });
+
+/**
+ * Checks if an entrypoint has an explicit price set.
+ */
+export function entrypointHasExplicitPrice(
+  entrypoint: EntrypointDef
+): boolean {
+  const { price } = entrypoint;
+  if (typeof price === 'string') {
+    return price.trim().length > 0;
+  }
+  if (price && typeof price === 'object') {
+    const hasInvoke = price.invoke;
+    const hasStream = price.stream;
+    const invokeDefined =
+      typeof hasInvoke === 'string'
+        ? hasInvoke.trim().length > 0
+        : hasInvoke !== undefined;
+    const streamDefined =
+      typeof hasStream === 'string'
+        ? hasStream.trim().length > 0
+        : hasStream !== undefined;
+    return invokeDefined || streamDefined;
+  }
+  return false;
+}
+
+/**
+ * Resolves active payments configuration for an entrypoint.
+ * Activates payments if the entrypoint has an explicit price and payments config is available.
+ */
+export function resolveActivePayments(
+  entrypoint: EntrypointDef,
+  paymentsOption: PaymentsConfig | false | undefined,
+  resolvedPayments: PaymentsConfig | undefined,
+  currentActivePayments: PaymentsConfig | undefined
+): PaymentsConfig | undefined {
+  // If payments are explicitly disabled, return undefined
+  if (paymentsOption === false) {
+    return undefined;
+  }
+
+  // If payments are already active, keep them active
+  if (currentActivePayments) {
+    return currentActivePayments;
+  }
+
+  // If entrypoint has no explicit price, don't activate payments
+  if (!entrypointHasExplicitPrice(entrypoint)) {
+    return undefined;
+  }
+
+  // If no resolved payments config, don't activate
+  if (!resolvedPayments) {
+    return undefined;
+  }
+
+  // Activate payments for this entrypoint
+  return { ...resolvedPayments };
+}
+
+/**
+ * Evaluates payment requirement for an entrypoint and returns HTTP response if needed.
+ */
+export function evaluatePaymentRequirement(
+  entrypoint: EntrypointDef,
+  kind: 'invoke' | 'stream',
+  activePayments: PaymentsConfig | undefined
+): RuntimePaymentRequirement {
+  const requirement = resolvePaymentRequirement(
+    entrypoint,
+    kind,
+    activePayments
+  );
+  if (requirement.required) {
+    const requiredRequirement = requirement as Extract<
+      PaymentRequirement,
+      { required: true }
+    >;
+    const enriched: RuntimePaymentRequirement = {
+      ...requiredRequirement,
+      response: paymentRequiredResponse(requiredRequirement),
+    };
+    return enriched;
+  }
+  return requirement as RuntimePaymentRequirement;
+}
 
 export const resolvePaymentRequirement = (
   entrypoint: EntrypointDef,

@@ -14,10 +14,8 @@ describe('AgentKit config management', () => {
 
   it('returns defaults when no overrides provided', () => {
     const config = getAgentKitConfig();
-    // Security: Payments are NOT configured by default to prevent accidental misconfiguration
-    expect(config.payments.facilitatorUrl).toBeUndefined();
-    expect(config.payments.payTo).toBeUndefined();
-    expect(config.wallet.walletApiUrl).toBeTruthy();
+    expect(config.payments).toBeUndefined();
+    expect(config.wallets).toBeUndefined();
   });
 
   it('allows scoped config per app instance without global mutation', () => {
@@ -101,13 +99,16 @@ describe('AgentKit config management', () => {
     expect(payments.network).toBe('base');
   });
 
-  it('instance config overrides global config', () => {
-    // Set global config
+  it('supports wallet overrides at global and instance scope', () => {
     configureAgentKit({
-      wallet: { walletApiUrl: 'https://global.example' },
+      wallets: {
+        agent: { type: 'local', privateKey: '0xglobal' },
+      },
     });
 
-    // Create app with instance-specific override
+    const globalConfig = getAgentKitConfig();
+    expect(globalConfig.wallets?.agent?.privateKey).toBe('0xglobal');
+
     const { config } = createAgentApp(
       {
         name: 'config-test-wallet',
@@ -115,15 +116,17 @@ describe('AgentKit config management', () => {
         description: 'Config test wallet agent',
       },
       {
-        config: { wallet: { walletApiUrl: 'https://instance.example' } },
+        config: {
+          wallets: {
+            agent: { type: 'local', privateKey: '0xinstance' },
+          },
+        },
       }
     );
 
-    // Instance config should override global
-    expect(config.wallet.walletApiUrl).toBe('https://instance.example');
+    expect(config.wallets?.agent?.privateKey).toBe('0xinstance');
 
-    // Global config unchanged
-    const globalConfig = getAgentKitConfig();
-    expect(globalConfig.wallet.walletApiUrl).toBe('https://global.example');
+    const globalAfter = getAgentKitConfig();
+    expect(globalAfter.wallets?.agent?.privateKey).toBe('0xglobal');
   });
 });
