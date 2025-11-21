@@ -4,10 +4,7 @@ import type { FacilitatorConfig } from 'x402/types';
 import { toJsonSchemaOrUndefined } from './utils';
 import type { EntrypointDef } from '@lucid-agents/types/core';
 import type { PaymentsConfig } from '@lucid-agents/types/payments';
-import {
-  resolvePrice,
-  validatePaymentsConfig,
-} from '@lucid-agents/payments';
+import { resolvePrice, validatePaymentsConfig } from '@lucid-agents/payments';
 
 type PaymentMiddlewareFactory = typeof paymentMiddleware;
 
@@ -35,9 +32,9 @@ export function withPayments({
   const network = entrypoint.network ?? payments.network;
   const price = resolvePrice(entrypoint, payments, kind);
 
-  if (!price) return false;
-
   validatePaymentsConfig(payments, network, entrypoint.key);
+
+  if (!price) return false;
   if (!payments.payTo) return false;
   const requestSchema = toJsonSchemaOrUndefined(entrypoint.input);
   const responseSchema = toJsonSchemaOrUndefined(entrypoint.output);
