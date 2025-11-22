@@ -41,7 +41,7 @@ async function main() {
     version: '1.0.0',
     description: 'ERC-8004 integration test agent',
   })
-    .use(wallets({ config: { wallets: walletsFromEnv() } }))
+    .use(wallets({ config: walletsFromEnv() }))
     .build();
 
   console.log('Runtime created with wallet configuration');

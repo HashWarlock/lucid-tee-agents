@@ -37,9 +37,12 @@
     "@lucid-agents/payments": "workspace:*",
     "hono": "catalog:"
   },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
   "devDependencies": {
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "zod": "^4.1.12"
+    "zod": "catalog:"
   }
 }

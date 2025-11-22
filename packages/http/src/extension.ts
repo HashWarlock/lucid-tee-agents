@@ -148,7 +148,7 @@ export function http(
           ? async req => {
               const origin = new URL(req.url).origin;
               const entrypoints = runtime.entrypoints.snapshot();
-              const html = renderLandingPage({
+              const html = await renderLandingPage({
                 meta,
                 origin,
                 entrypoints,

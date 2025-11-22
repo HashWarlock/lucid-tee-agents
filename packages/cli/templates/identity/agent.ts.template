@@ -8,7 +8,7 @@ import { createAgentIdentity, getTrustConfig } from "@lucid-agents/identity";
 {{ADAPTER_PRE_SETUP}}
 // Add extensions for HTTP, wallets, and identity
 appBuilder.use(http());
-appBuilder.use(wallets({ config: { wallets: walletsFromEnv() } }));
+appBuilder.use(wallets({ config: walletsFromEnv() }));
 appBuilder.use(identity({ config: identityFromEnv() }));
 
 {{ADAPTER_POST_SETUP}}

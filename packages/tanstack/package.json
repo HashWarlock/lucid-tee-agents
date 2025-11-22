@@ -35,7 +35,6 @@
     "@lucid-agents/core": "workspace:*",
     "@lucid-agents/payments": "workspace:*",
     "@lucid-agents/types": "workspace:*",
-    "@solana/kit": "^2.1.1",
     "@tanstack/react-start": "^1.134.13",
     "viem": "^2.21.26",
     "x402": "catalog:",

@@ -12,7 +12,6 @@ export default defineConfig({
     '@lucid-agents/core',
     '@lucid-agents/payments',
     '@lucid-agents/types',
-    '@solana/kit',
     '@tanstack/react-start',
     '@tanstack/start',
     '@tanstack/react-router',

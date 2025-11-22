@@ -33,15 +33,17 @@ const adapterDefinitions: Record<string, AdapterDefinition> = {
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
       imports: `import { createApp } from "@lucid-agents/core";
+import { http } from "@lucid-agents/http";
 import { createAgentApp } from "@lucid-agents/hono";`,
       preSetup: ``,
-      appCreation: `const appBuilder = createApp({
+      appCreation: `const runtime = await createApp({
   name: process.env.AGENT_NAME,
   version: process.env.AGENT_VERSION,
   description: process.env.AGENT_DESCRIPTION,
-});
+})
+  .use(http())
+  .build();
 
-const runtime = await appBuilder.build();
 const { app, addEntrypoint } = createAgentApp(runtime);`,
       entrypointRegistration: `addEntrypoint({
   key: "echo",
@@ -68,15 +70,17 @@ const { app, addEntrypoint } = createAgentApp(runtime);`,
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
       imports: `import { createApp } from "@lucid-agents/core";
+import { http } from "@lucid-agents/http";
 import { createAgentApp } from "@lucid-agents/express";`,
       preSetup: ``,
-      appCreation: `const appBuilder = createApp({
+      appCreation: `const runtime = await createApp({
   name: process.env.AGENT_NAME,
   version: process.env.AGENT_VERSION,
   description: process.env.AGENT_DESCRIPTION,
-});
+})
+  .use(http())
+  .build();
 
-const runtime = await appBuilder.build();
 const { app, addEntrypoint } = createAgentApp(runtime);`,
       entrypointRegistration: `addEntrypoint({
   key: "echo",
@@ -103,19 +107,21 @@ const { app, addEntrypoint } = createAgentApp(runtime);`,
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
       imports: `import { createApp } from "@lucid-agents/core";
+import { http } from "@lucid-agents/http";
 import { createTanStackRuntime } from "@lucid-agents/tanstack";`,
       preSetup: ``,
-      appCreation: `const appBuilder = createApp({
+      appCreation: `const app = await createApp({
   name: process.env.AGENT_NAME,
   version: process.env.AGENT_VERSION,
   description: process.env.AGENT_DESCRIPTION,
-});
+})
+  .use(http())
+  .build();
 
-const runtime = await appBuilder.build();
-const tanstack = await createTanStackRuntime(runtime);
+const tanstack = await createTanStackRuntime(app);
 
 const { handlers } = tanstack;`,
-      entrypointRegistration: `runtime.entrypoints.add({
+      entrypointRegistration: `app.entrypoints.add({
   key: "echo",
   description: "Echo input text",
   input: z.object({
@@ -130,9 +136,9 @@ const { handlers } = tanstack;`,
   },
 });`,
       postSetup: ``,
-      exports: `const { agent } = runtime;
+      exports: `const { agent } = app;
 
-export { agent, handlers, runtime };`,
+export { agent, handlers, app };`,
     },
   },
   'tanstack-headless': {
@@ -142,19 +148,21 @@ export { agent, handlers, runtime };`,
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
       imports: `import { createApp } from "@lucid-agents/core";
+import { http } from "@lucid-agents/http";
 import { createTanStackRuntime } from "@lucid-agents/tanstack";`,
       preSetup: ``,
-      appCreation: `const appBuilder = createApp({
+      appCreation: `const app = await createApp({
   name: process.env.AGENT_NAME,
   version: process.env.AGENT_VERSION,
   description: process.env.AGENT_DESCRIPTION,
-});
+})
+  .use(http())
+  .build();
 
-const runtime = await appBuilder.build();
-const tanstack = await createTanStackRuntime(runtime);
+const tanstack = await createTanStackRuntime(app);
 
 const { handlers } = tanstack;`,
-      entrypointRegistration: `runtime.entrypoints.add({
+      entrypointRegistration: `app.entrypoints.add({
   key: "echo",
   description: "Echo input text",
   input: z.object({
@@ -169,9 +177,9 @@ const { handlers } = tanstack;`,
   },
 });`,
       postSetup: ``,
-      exports: `const { agent } = runtime;
+      exports: `const { agent } = app;
 
-export { agent, handlers, runtime };`,
+export { agent, handlers, app };`,
     },
   },
   next: {
@@ -180,17 +188,18 @@ export { agent, handlers, runtime };`,
     filesDir: join(ADAPTER_FILES_ROOT, 'next'),
     placeholderTargets: ['lib/agent.ts.template'],
     snippets: {
-      imports: `import { createApp } from "@lucid-agents/core";`,
+      imports: `import { createApp } from "@lucid-agents/core";
+import { http } from "@lucid-agents/http";`,
       preSetup: ``,
-      appCreation: `const appBuilder = createApp({
+      appCreation: `const app = await createApp({
   name: process.env.AGENT_NAME,
   version: process.env.AGENT_VERSION,
   description: process.env.AGENT_DESCRIPTION,
-});
+})
+  .use(http())
+  .build();
 
-const runtime = appBuilder.build();
-
-const { agent, handlers, entrypoints } = runtime;
+const { agent, handlers, entrypoints } = app;
 
 const addEntrypoint = (def: typeof entrypoints.snapshot()[number]) => {
   entrypoints.add(def);
@@ -210,7 +219,7 @@ const addEntrypoint = (def: typeof entrypoints.snapshot()[number]) => {
   },
 });`,
       postSetup: ``,
-      exports: `export { agent, handlers, runtime };`,
+      exports: `export { agent, handlers, app };`,
     },
   },
 };
