@@ -2,7 +2,7 @@ import {
   configureAgentKit,
   getAgentKitConfig,
   resetAgentKitConfigForTesting,
-  createApp,
+  createAgent,
 } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { payments } from '@lucid-agents/payments';
@@ -28,7 +28,7 @@ describe('AgentKit config management', () => {
       payTo: '0x1230000000000000000000000000000000000000',
       network: 'base' as any,
     };
-    const runtime1 = await createApp({
+    const agent1 = await createAgent({
       name: 'config-test-1',
       version: '0.0.0',
       description: 'Test agent',
@@ -38,7 +38,7 @@ describe('AgentKit config management', () => {
       .build({
         payments: paymentsConfig1,
       });
-    const result1 = await createAgentApp(runtime1);
+    const result1 = await createAgentApp(agent1);
 
     // App instance has the scoped config
     expect(result1.config.payments?.facilitatorUrl).toBe(
@@ -57,7 +57,7 @@ describe('AgentKit config management', () => {
       payTo: '0x4560000000000000000000000000000000000000',
       network: 'optimism' as any,
     };
-    const runtime2 = await createApp({
+    const agent2 = await createAgent({
       name: 'config-test-2',
       version: '0.0.0',
       description: 'Test agent 2',
@@ -67,7 +67,7 @@ describe('AgentKit config management', () => {
       .build({
         payments: paymentsConfig2,
       });
-    const result2 = await createAgentApp(runtime2);
+    const result2 = await createAgentApp(agent2);
 
     // Each agent has its own config (no cross-contamination)
     expect(result1.config.payments?.facilitatorUrl).toBe(
@@ -103,8 +103,10 @@ describe('AgentKit config management', () => {
 
   it('supports wallet overrides at global and instance scope', async () => {
     // Use valid 64-character hex private keys
-    const globalPrivateKey = '0x1234567890123456789012345678901234567890123456789012345678901234';
-    const instancePrivateKey = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+    const globalPrivateKey =
+      '0x1234567890123456789012345678901234567890123456789012345678901234';
+    const instancePrivateKey =
+      '0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd';
 
     configureAgentKit({
       wallets: {
@@ -115,7 +117,7 @@ describe('AgentKit config management', () => {
     const globalConfig = getAgentKitConfig();
     expect(globalConfig.wallets?.agent?.privateKey).toBe(globalPrivateKey);
 
-    const runtime = await createApp({
+    const agent = await createAgent({
       name: 'config-test-wallet',
       version: '0.0.0',
       description: 'Config test wallet agent',
@@ -133,7 +135,7 @@ describe('AgentKit config management', () => {
           agent: { type: 'local', privateKey: instancePrivateKey },
         },
       });
-    const { config } = await createAgentApp(runtime);
+    const { config } = await createAgentApp(agent);
 
     // The config should have the wallet configuration
     expect(config.wallets?.agent?.privateKey).toBe(instancePrivateKey);

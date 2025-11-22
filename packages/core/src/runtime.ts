@@ -1,9 +1,9 @@
 import type { AgentMeta } from '@lucid-agents/types/core';
 
-import { AppBuilder } from './extensions/builder';
+import { AgentBuilder } from './extensions/builder';
 
 /**
- * Creates a new app builder for constructing an agent runtime with extensions.
+ * Creates a new agent builder for constructing an agent runtime with extensions.
  *
  * @example
  * ```typescript
@@ -11,15 +11,15 @@ import { AppBuilder } from './extensions/builder';
  * const payments = payments({ config });
  * const a2a = a2a();
  *
- * const runtime = createApp(meta)
+ * const agent = createAgent(meta)
  *   .use(identity)
  *   .use(payments)
  *   .use(a2a)
  *   .build();
  * ```
  */
-export function createApp(meta: AgentMeta): AppBuilder {
-  return new AppBuilder(meta);
+export function createAgent(meta: AgentMeta): AgentBuilder {
+  return new AgentBuilder(meta);
 }
 
-export { AppBuilder } from './extensions/builder';
+export { AgentBuilder } from './extensions/builder';

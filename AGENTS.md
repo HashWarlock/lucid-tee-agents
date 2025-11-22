@@ -303,7 +303,7 @@ type PaymentsRuntime = {
 │   ├── core/               # Protocol-agnostic runtime
 │   │   ├── src/
 │   │   │   ├── core/            # AgentCore, entrypoint management
-│   │   │   ├── extensions/      # AppBuilder, extension system
+│   │   │   ├── extensions/      # AgentBuilder, extension system
 │   │   │   ├── config/          # Config management
 │   │   │   └── utils/           # Helper utilities
 │   │   └── AGENTS.md            # Package-specific guide
@@ -435,7 +435,7 @@ import { payments } from '@lucid-agents/payments';
 import { paymentsFromEnv } from '@lucid-agents/payments';
 import { createAgentApp } from '@lucid-agents/hono';
 
-const runtime = createApp({
+const agent = await createAgent({
   name: 'my-agent',
   version: '0.1.0',
   description: 'Agent description',
@@ -456,7 +456,7 @@ import { createApp } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { createAgentApp } from '@lucid-agents/express';
 
-const runtime = createApp({
+const agent = await createAgent({
   name: 'my-agent',
   version: '0.1.0',
   description: 'Agent description',
@@ -479,7 +479,7 @@ import { createApp } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { createTanStackRuntime } from '@lucid-agents/tanstack';
 
-const runtime = createApp({
+const agent = await createAgent({
   name: 'my-agent',
   version: '0.1.0',
   description: 'Agent description',
@@ -533,7 +533,7 @@ import { wallets } from '@lucid-agents/wallet';
 import { walletsFromEnv } from '@lucid-agents/wallet';
 import { createAgentIdentity } from '@lucid-agents/identity';
 
-const runtime = createApp({
+const agent = await createAgent({
   name: 'my-agent',
   version: '1.0.0',
 })

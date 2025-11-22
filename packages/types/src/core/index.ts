@@ -470,7 +470,7 @@ export interface Extension<R extends Record<string, unknown> = {}> {
 
   /**
    * Builds the extension's runtime slice.
-   * Called during AppBuilder.build() to construct the runtime.
+   * Called during AgentBuilder.build() to construct the runtime.
    */
   build: (ctx: BuildContext) => R;
 

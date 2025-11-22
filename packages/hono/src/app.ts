@@ -4,7 +4,6 @@ import type {
   CreateAgentAppReturn,
   AgentRuntime,
 } from '@lucid-agents/types/core';
-import { AppBuilder } from '@lucid-agents/core';
 import { withPayments } from './paywall';
 
 export type CreateAgentAppOptions = {
@@ -21,20 +20,16 @@ export type CreateAgentAppOptions = {
 };
 
 export async function createAgentApp(
-  runtimeOrBuilder: AgentRuntime | AppBuilder,
+  runtime: AgentRuntime,
   opts?: CreateAgentAppOptions
-): Promise<CreateAgentAppReturn<
-  Hono,
-  AgentRuntime,
-  AgentRuntime['agent'],
-  AgentRuntime['config']
->> {
-  // Build runtime if builder is provided
-  const runtime: AgentRuntime =
-    runtimeOrBuilder instanceof AppBuilder
-      ? await runtimeOrBuilder.build()
-      : runtimeOrBuilder;
-
+): Promise<
+  CreateAgentAppReturn<
+    Hono,
+    AgentRuntime,
+    AgentRuntime['agent'],
+    AgentRuntime['config']
+  >
+> {
   // Require HTTP extension - runtime must have handlers
   if (!runtime.handlers) {
     throw new Error(

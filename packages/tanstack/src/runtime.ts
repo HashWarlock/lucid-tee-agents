@@ -1,4 +1,4 @@
-import { AppBuilder } from '@lucid-agents/core';
+import { AgentBuilder } from '@lucid-agents/core';
 import type { AgentRuntime } from '@lucid-agents/types/core';
 
 export type TanStackRequestHandler = (ctx: {
@@ -71,13 +71,10 @@ export function createTanStackHandlers(
 }
 
 export async function createTanStackRuntime(
-  runtimeOrBuilder: AgentRuntime | AppBuilder
+  agent: AgentBuilder
 ): Promise<TanStackRuntime> {
-  // Build runtime if builder is provided
-  const runtime: AgentRuntime =
-    runtimeOrBuilder instanceof AppBuilder
-      ? await runtimeOrBuilder.build()
-      : runtimeOrBuilder;
+  // Build the agent runtime
+  const runtime: AgentRuntime = await agent.build();
 
   return {
     runtime,

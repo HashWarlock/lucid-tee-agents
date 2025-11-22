@@ -1,4 +1,4 @@
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { payments } from '@lucid-agents/payments';
 import { createAgentApp } from '@lucid-agents/hono';
@@ -14,7 +14,7 @@ describe('Hono Solana Payments', () => {
   };
 
   it('creates agent with Solana network configuration', async () => {
-    const runtime = await createApp({
+    const agent = await createAgent({
       name: 'solana-agent',
       version: '1.0.0',
       description: 'Agent accepting Solana payments',
@@ -22,7 +22,7 @@ describe('Hono Solana Payments', () => {
       .use(http())
       .use(payments({ config: solanaPayments }))
       .build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const { app, addEntrypoint } = await createAgentApp(agent);
 
     addEntrypoint({
       key: 'echo',
@@ -46,14 +46,14 @@ describe('Hono Solana Payments', () => {
     // which handles payment verification. The middleware is an external package
     // that should support solana-devnet and solana networks.
 
-    const runtime = await createApp({
+    const agent = await createAgent({
       name: 'solana-agent',
       version: '1.0.0',
     })
       .use(http())
       .use(payments({ config: solanaPayments }))
       .build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const { app, addEntrypoint } = await createAgentApp(agent);
 
     addEntrypoint({
       key: 'paid-task',
@@ -84,11 +84,11 @@ describe('Hono Solana Payments', () => {
         network: 'solana',
       };
 
-      const runtime = await createApp({ name: 'test', version: '1.0.0' })
+      const agent = await createAgent({ name: 'test', version: '1.0.0' })
         .use(http())
         .use(payments({ config }))
         .build();
-      const { app } = await createAgentApp(runtime);
+      const { app } = await createAgentApp(agent);
 
       expect(app).toBeDefined();
     }
@@ -104,7 +104,7 @@ describe('Hono Solana Payments', () => {
     ] as const;
 
     for (const { value: network, name } of networks) {
-      const runtime = await createApp({ name: 'test', version: '1.0.0' })
+      const agent = await createAgent({ name: 'test', version: '1.0.0' })
         .use(http())
         .use(
           payments({
@@ -115,7 +115,7 @@ describe('Hono Solana Payments', () => {
           })
         )
         .build();
-      const { app, addEntrypoint } = await createAgentApp(runtime);
+      const { app, addEntrypoint } = await createAgentApp(agent);
 
       addEntrypoint({
         key: 'test',
@@ -129,7 +129,7 @@ describe('Hono Solana Payments', () => {
   });
 
   it('includes manifest with Solana payment metadata', async () => {
-    const runtime = await createApp({
+    const agent = await createAgent({
       name: 'solana-agent',
       version: '1.0.0',
       description: 'Solana payment agent',
@@ -137,7 +137,7 @@ describe('Hono Solana Payments', () => {
       .use(http())
       .use(payments({ config: solanaPayments }))
       .build();
-    const { app } = await createAgentApp(runtime);
+    const { app } = await createAgentApp(agent);
 
     const request = new Request('http://localhost/.well-known/agent.json', {
       method: 'GET',
@@ -164,11 +164,11 @@ describe('Hono Solana Payments', () => {
       network: 'solana-mainnet' as any, // Invalid - should be 'solana'
     };
 
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(http())
       .use(payments({ config: invalidPayments }))
       .build();
-    const { addEntrypoint } = await createAgentApp(runtime);
+    const { addEntrypoint } = await createAgentApp(agent);
 
     // Should throw when adding entrypoint (validation happens during paywall setup)
     expect(() => {

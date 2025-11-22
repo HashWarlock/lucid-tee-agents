@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, mock } from 'bun:test';
 import { z } from 'zod';
 
 import { resetAgentKitConfigForTesting } from '../config/config';
-import { createApp } from '../runtime';
+import { createAgent } from '../runtime';
 
 const makeRuntimeStub = (): {
   runtime: Pick<AgentRuntime, 'wallets'>;
@@ -205,7 +205,7 @@ describe('runtime Solana payments', () => {
   });
 });
 
-describe('createApp payments activation', () => {
+describe('createAgent payments activation', () => {
   afterEach(() => {
     resetAgentKitConfigForTesting();
   });
@@ -217,25 +217,25 @@ describe('createApp payments activation', () => {
   };
 
   it('starts with payments undefined when no priced entrypoints', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
-    expect(runtime.agent.config.payments).toBeUndefined();
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
+    expect(agent.agent.config.payments).toBeUndefined();
   });
 
   it('activates payments when priced entrypoint is added', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid',
       description: 'Paid endpoint',
       price: '1000',
@@ -243,40 +243,40 @@ describe('createApp payments activation', () => {
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(true);
-    expect(runtime.payments?.config.payTo).toBe(paymentsConfig.payTo);
-    expect(runtime.agent.config.payments).toBeDefined();
-    expect(runtime.agent.config.payments?.payTo).toBe(paymentsConfig.payTo);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.payments?.isActive).toBe(true);
+    expect(agent.payments?.config.payTo).toBe(paymentsConfig.payTo);
+    expect(agent.agent.config.payments).toBeDefined();
+    expect(agent.agent.config.payments?.payTo).toBe(paymentsConfig.payTo);
   });
 
   it('does not activate payments when non-priced entrypoint is added', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'free',
       description: 'Free endpoint',
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
-    expect(runtime.agent.config.payments).toBeUndefined();
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
+    expect(agent.agent.config.payments).toBeUndefined();
   });
 
   it('activates payments when entrypoint with price object is added', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'streaming',
       description: 'Streaming endpoint',
       price: { invoke: '1000', stream: '2000' },
@@ -284,18 +284,18 @@ describe('createApp payments activation', () => {
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(true);
-    expect(runtime.agent.config.payments).toBeDefined();
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.payments?.isActive).toBe(true);
+    expect(agent.agent.config.payments).toBeDefined();
   });
 
   it('keeps payments active after first activation', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid1',
       description: 'First paid endpoint',
       price: '1000',
@@ -303,22 +303,22 @@ describe('createApp payments activation', () => {
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    const paymentsAfterFirst = runtime.payments?.config;
+    const paymentsAfterFirst = agent.payments?.config;
     expect(paymentsAfterFirst).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(true);
+    expect(agent.payments?.isActive).toBe(true);
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'free',
       description: 'Free endpoint',
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    expect(runtime.payments?.config).toBe(paymentsAfterFirst);
-    expect(runtime.payments?.isActive).toBe(true);
-    expect(runtime.agent.config.payments).toBe(paymentsAfterFirst);
+    expect(agent.payments?.config).toBe(paymentsAfterFirst);
+    expect(agent.payments?.isActive).toBe(true);
+    expect(agent.agent.config.payments).toBe(paymentsAfterFirst);
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid2',
       description: 'Second paid endpoint',
       price: '2000',
@@ -326,16 +326,16 @@ describe('createApp payments activation', () => {
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    expect(runtime.payments?.config).toBe(paymentsAfterFirst);
-    expect(runtime.payments?.isActive).toBe(true);
+    expect(agent.payments?.config).toBe(paymentsAfterFirst);
+    expect(agent.payments?.isActive).toBe(true);
   });
 
   it('does not activate payments when payments are explicitly disabled', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: false }))
       .build();
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid',
       description: 'Paid endpoint',
       price: '1000',
@@ -343,12 +343,12 @@ describe('createApp payments activation', () => {
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    expect(runtime.payments).toBeUndefined();
-    expect(runtime.agent.config.payments).toBeUndefined();
+    expect(agent.payments).toBeUndefined();
+    expect(agent.agent.config.payments).toBeUndefined();
   });
 
   it('activates payments when entrypoints provided in options', async () => {
-    const builder = createApp({ name: 'test', version: '1.0.0' });
+    const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.use(payments({ config: paymentsConfig }));
     builder.addEntrypoint({
       key: 'paid',
@@ -357,16 +357,16 @@ describe('createApp payments activation', () => {
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
-    const runtime = await builder.build();
+    const agent = await builder.build();
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(true);
-    expect(runtime.agent.config.payments).toBeDefined();
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.payments?.isActive).toBe(true);
+    expect(agent.agent.config.payments).toBeDefined();
   });
 
   it('does not activate payments when entrypoints without prices provided in options', async () => {
-    const builder = createApp({ name: 'test', version: '1.0.0' });
+    const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.use(payments({ config: paymentsConfig }));
     builder.addEntrypoint({
       key: 'free',
@@ -374,19 +374,19 @@ describe('createApp payments activation', () => {
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
-    const runtime = await builder.build();
+    const agent = await builder.build();
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
-    expect(runtime.agent.config.payments).toBeUndefined();
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
+    expect(agent.agent.config.payments).toBeUndefined();
   });
 
   it('syncs runtime.payments?.config and agent.config.payments', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid',
       description: 'Paid endpoint',
       price: '1000',
@@ -394,8 +394,8 @@ describe('createApp payments activation', () => {
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    const runtimePayments = runtime.payments?.config;
-    const agentPayments = runtime.agent.config.payments;
+    const runtimePayments = agent.payments?.config;
+    const agentPayments = agent.agent.config.payments;
 
     expect(runtimePayments).toBe(agentPayments);
     expect(runtimePayments?.payTo).toBe(paymentsConfig.payTo);
@@ -409,7 +409,7 @@ describe('createAgentRuntime wallets', () => {
   });
 
   it('creates wallets from config when provided', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(
         wallets({
           config: {
@@ -428,13 +428,13 @@ describe('createAgentRuntime wallets', () => {
       )
       .build();
 
-    expect(runtime.wallets).toBeDefined();
-    expect(runtime.wallets?.agent).toBeDefined();
-    expect(runtime.wallets?.developer).toBeDefined();
+    expect(agent.wallets).toBeDefined();
+    expect(agent.wallets?.agent).toBeDefined();
+    expect(agent.wallets?.developer).toBeDefined();
   });
 
   it('creates only agent wallet when only agent provided', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(
         wallets({
           config: {
@@ -448,13 +448,13 @@ describe('createAgentRuntime wallets', () => {
       )
       .build();
 
-    expect(runtime.wallets).toBeDefined();
-    expect(runtime.wallets?.agent).toBeDefined();
-    expect(runtime.wallets?.developer).toBeUndefined();
+    expect(agent.wallets).toBeDefined();
+    expect(agent.wallets?.agent).toBeDefined();
+    expect(agent.wallets?.developer).toBeUndefined();
   });
 
   it('creates only developer wallet when only developer provided', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(
         wallets({
           config: {
@@ -468,15 +468,15 @@ describe('createAgentRuntime wallets', () => {
       )
       .build();
 
-    expect(runtime.wallets).toBeDefined();
-    expect(runtime.wallets?.agent).toBeUndefined();
-    expect(runtime.wallets?.developer).toBeDefined();
+    expect(agent.wallets).toBeDefined();
+    expect(agent.wallets?.agent).toBeUndefined();
+    expect(agent.wallets?.developer).toBeDefined();
   });
 
   it('has undefined wallets when no wallet config provided', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' }).build();
+    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
-    expect(runtime.wallets).toBeUndefined();
+    expect(agent.wallets).toBeUndefined();
   });
 });
 
@@ -494,18 +494,18 @@ describe('createAgentRuntime config resolution', () => {
       },
     };
 
-    const runtime = await createApp({ name: 'test', version: '1.0.0' }).build(
+    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build(
       customConfig
     );
 
-    expect(runtime.config.payments?.payTo).toBe('0xCustomAddress');
+    expect(agent.config.payments?.payTo).toBe('0xCustomAddress');
   });
 
   it('returns resolved config', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' }).build();
+    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
-    expect(runtime.config).toBeDefined();
-    expect(typeof runtime.config).toBe('object');
+    expect(agent.config).toBeDefined();
+    expect(typeof agent.config).toBe('object');
   });
 });
 
@@ -515,7 +515,7 @@ describe('createAgentRuntime entrypoints', () => {
   });
 
   it('initializes entrypoints from options', async () => {
-    const builder = createApp({ name: 'test', version: '1.0.0' });
+    const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.addEntrypoint({
       key: 'echo',
       description: 'Echo endpoint',
@@ -528,15 +528,15 @@ describe('createAgentRuntime entrypoints', () => {
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { text: 'reverse' } }),
     });
-    const runtime = await builder.build();
+    const agent = await builder.build();
 
-    const entrypoints = runtime.entrypoints.list();
+    const entrypoints = agent.entrypoints.list();
     expect(entrypoints).toHaveLength(2);
     expect(entrypoints.map(e => e.key)).toEqual(['echo', 'reverse']);
   });
 
   it('activates payments when initial entrypoints have prices', async () => {
-    const builder = createApp({ name: 'test', version: '1.0.0' });
+    const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.use(
       payments({
         config: {
@@ -553,15 +553,15 @@ describe('createAgentRuntime entrypoints', () => {
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
-    const runtime = await builder.build();
+    const agent = await builder.build();
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.entrypoints.list()).toHaveLength(1);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.entrypoints.list()).toHaveLength(1);
   });
 
   it('does not activate payments when initial entrypoints have no prices', async () => {
-    const builder = createApp({ name: 'test', version: '1.0.0' });
+    const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.use(
       payments({
         config: {
@@ -577,11 +577,11 @@ describe('createAgentRuntime entrypoints', () => {
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
-    const runtime = await builder.build();
+    const agent = await builder.build();
 
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
-    expect(runtime.entrypoints.list()).toHaveLength(1);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
+    expect(agent.entrypoints.list()).toHaveLength(1);
   });
 });
 
@@ -591,27 +591,27 @@ describe('createAgentRuntime manifest', () => {
   });
 
   it('builds manifest with correct origin', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' }).build();
+    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
-    const manifest = runtime.manifest.build('https://example.com');
+    const manifest = agent.manifest.build('https://example.com');
     expect(manifest).toBeDefined();
     expect(manifest.name).toBe('test');
   });
 
   it('caches manifest for same origin', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' }).build();
+    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
-    const manifest1 = runtime.manifest.build('https://example.com');
-    const manifest2 = runtime.manifest.build('https://example.com');
+    const manifest1 = agent.manifest.build('https://example.com');
+    const manifest2 = agent.manifest.build('https://example.com');
 
     expect(manifest1).toBe(manifest2);
   });
 
   it('builds different manifests for different origins', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' }).build();
+    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
-    const manifest1 = runtime.manifest.build('https://example.com');
-    const manifest2 = runtime.manifest.build('https://other.com');
+    const manifest1 = agent.manifest.build('https://example.com');
+    const manifest2 = agent.manifest.build('https://other.com');
 
     expect(manifest1).not.toBe(manifest2);
   });
@@ -623,11 +623,11 @@ describe('createAgentRuntime manifest', () => {
       network: 'base-sepolia',
     };
 
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid',
       description: 'Paid endpoint',
       price: '1000',
@@ -635,27 +635,27 @@ describe('createAgentRuntime manifest', () => {
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    const manifest = runtime.manifest.build('https://example.com');
+    const manifest = agent.manifest.build('https://example.com');
     expect(manifest.payments).toBeDefined();
     expect(Array.isArray(manifest.payments)).toBe(true);
   });
 
   it('invalidates manifest cache when entrypoint is added', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' }).build();
+    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
-    const manifest1 = runtime.manifest.build('https://example.com');
+    const manifest1 = agent.manifest.build('https://example.com');
     const initialEntrypointCount = Object.keys(
       manifest1.entrypoints ?? {}
     ).length;
 
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'new',
       description: 'New endpoint',
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
 
-    const manifest2 = runtime.manifest.build('https://example.com');
+    const manifest2 = agent.manifest.build('https://example.com');
     const newEntrypointCount = Object.keys(manifest2.entrypoints ?? {}).length;
     expect(newEntrypointCount).toBeGreaterThan(initialEntrypointCount);
   });
@@ -667,7 +667,7 @@ describe('createAgentRuntime integration', () => {
   });
 
   it('handles full flow: config → wallets → payments → entrypoints → manifest', async () => {
-    const builder = createApp({ name: 'test', version: '1.0.0' });
+    const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.use(
       wallets({
         config: {
@@ -694,20 +694,20 @@ describe('createAgentRuntime integration', () => {
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
-    const runtime = await builder.build();
+    const agent = await builder.build();
 
     // Wallets created
-    expect(runtime.wallets?.agent).toBeDefined();
+    expect(agent.wallets?.agent).toBeDefined();
 
     // Payments configured but not active yet (no priced entrypoints)
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
 
     // Entrypoints initialized
-    expect(runtime.entrypoints.list()).toHaveLength(1);
+    expect(agent.entrypoints.list()).toHaveLength(1);
 
     // Add priced entrypoint
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid',
       description: 'Paid endpoint',
       price: '1000',
@@ -716,18 +716,18 @@ describe('createAgentRuntime integration', () => {
     });
 
     // Payments now active
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(true);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.payments?.isActive).toBe(true);
 
     // Manifest includes payments
-    const manifest = runtime.manifest.build('https://example.com');
+    const manifest = agent.manifest.build('https://example.com');
     expect(manifest.payments).toBeDefined();
-    expect(runtime.entrypoints.list()).toHaveLength(2);
+    expect(agent.entrypoints.list()).toHaveLength(2);
   });
 
   it('handles mixed priced and free entrypoints', async () => {
-    const runtime = await createApp({ name: 'test', version: '1.0.0' })
+    const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(
         payments({
           config: {
@@ -740,39 +740,39 @@ describe('createAgentRuntime integration', () => {
       .build();
 
     // Add free entrypoint first
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'free',
       description: 'Free endpoint',
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(false);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.isActive).toBe(false);
 
     // Add paid entrypoint
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'paid',
       description: 'Paid endpoint',
       price: '1000',
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(true);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.payments?.isActive).toBe(true);
 
     // Add another free entrypoint
-    runtime.entrypoints.add({
+    agent.entrypoints.add({
       key: 'free2',
       description: 'Another free endpoint',
       input: z.object({ text: z.string() }),
       handler: async () => ({ output: { result: 'ok' } }),
     });
     // Payments should still be active
-    expect(runtime.payments).toBeDefined();
-    expect(runtime.payments?.config).toBeDefined();
-    expect(runtime.payments?.isActive).toBe(true);
+    expect(agent.payments).toBeDefined();
+    expect(agent.payments?.config).toBeDefined();
+    expect(agent.payments?.isActive).toBe(true);
 
-    expect(runtime.entrypoints.list()).toHaveLength(3);
+    expect(agent.entrypoints.list()).toHaveLength(3);
   });
 });

@@ -13,7 +13,7 @@ import { getAgentKitConfig, setActiveInstanceConfig } from '../config/config';
 import { createAgentCore } from '../core/agent';
 import type { Network } from '../core/types';
 
-export class AppBuilder {
+export class AgentBuilder {
   private extensions: Extension[] = [];
   private entrypoints: EntrypointDef[] = [];
 

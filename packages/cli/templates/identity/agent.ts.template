@@ -6,17 +6,21 @@ import { identity, identityFromEnv } from "@lucid-agents/identity";
 import { createAgentIdentity, getTrustConfig } from "@lucid-agents/identity";
 
 {{ADAPTER_PRE_SETUP}}
-// Add extensions for HTTP, wallets, and identity
-appBuilder.use(http());
-appBuilder.use(wallets({ config: walletsFromEnv() }));
-appBuilder.use(identity({ config: identityFromEnv() }));
+// Add extensions for wallets and identity
+agent.use(wallets({ config: walletsFromEnv() }));
+agent.use(identity({ 
+  config: {
+    ...identityFromEnv(),
+    autoRegister: process.env.REGISTER_IDENTITY === "true",
+  }
+}));
 
 {{ADAPTER_POST_SETUP}}
 // Identity feature setup
 // Note: The identity extension has already been configured above
-// This section creates the on-chain identity using the runtime's wallets
+// This section creates the on-chain identity using the agent's wallets
 const identityResult = await createAgentIdentity({
-  runtime,
+  runtime: agent,
   domain: process.env.AGENT_DOMAIN,
   autoRegister: process.env.REGISTER_IDENTITY === "true",
   rpcUrl: process.env.RPC_URL,

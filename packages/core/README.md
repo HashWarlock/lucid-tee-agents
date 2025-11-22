@@ -51,7 +51,7 @@ Subpath exports (shared across adapters):
 
 ### Core Runtime
 
-This package provides the core runtime logic via an extension-based API. Use `createApp()` to build a runtime with extensions, then pass it to adapter packages like `@lucid-agents/hono` and `@lucid-agents/tanstack`.
+This package provides the core runtime logic via an extension-based API. Use `createAgent()` to build a runtime with extensions, then pass it to adapter packages like `@lucid-agents/hono` and `@lucid-agents/tanstack`.
 
 **Extension System:**
 
@@ -67,7 +67,7 @@ The runtime uses a modular extension system where features are added via `.use()
 **Building a Runtime:**
 
 ```ts
-const runtime = createApp({
+const agent = await createAgent({
   name: 'my-agent',
   version: '1.0.0',
   description: 'My agent',
@@ -88,11 +88,11 @@ const runtime = createApp({
 
 ```ts
 import { z } from 'zod';
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { createAgentApp } from '@lucid-agents/hono';
 
-const runtime = createApp({
+const agent = await createAgent({
   name: 'hello-agent',
   version: '0.1.0',
   description: 'Echoes whatever you pass in',
@@ -121,11 +121,11 @@ export default app;
 
 ```ts
 import { z } from 'zod';
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { createAgentApp } from '@lucid-agents/express';
 
-const runtime = createApp({
+const agent = await createAgent({
   name: 'hello-agent',
   version: '0.1.0',
   description: 'Echoes whatever you pass in',
@@ -154,11 +154,11 @@ app.listen(process.env.PORT ?? 3000);
 
 ```ts
 import { z } from 'zod';
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { createTanStackRuntime } from '@lucid-agents/tanstack';
 
-const appRuntime = createApp({
+const agent = await createAgent({
   name: 'hello-agent',
   version: '0.1.0',
   description: 'Echoes whatever you pass in',

@@ -42,14 +42,14 @@ const ap2Runtime = createAP2Runtime({
 ### Integration with Agent Runtime
 
 ```typescript
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { payments } from '@lucid-agents/payments';
 import { ap2 } from '@lucid-agents/ap2';
 import { createAgentApp } from '@lucid-agents/hono';
 
 // AP2 must be explicitly configured - no auto-detection
-const runtime = createApp({
+const agent = await createAgent({
   name: 'my-agent',
   version: '1.0.0',
 })

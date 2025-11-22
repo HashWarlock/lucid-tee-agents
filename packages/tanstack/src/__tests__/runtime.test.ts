@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createApp } from "@lucid-agents/core";
+import { createAgent } from "@lucid-agents/core";
 import { http } from "@lucid-agents/http";
 import { createTanStackRuntime } from "../runtime";
 
@@ -11,16 +11,15 @@ const meta = {
 
 describe("createTanStackRuntime", () => {
   it("exposes tanstack handlers alongside the core runtime", async () => {
-    const runtime = await createApp(meta)
-      .use(http())
-      .build();
-    runtime.entrypoints.add({
+    const agent = createAgent(meta)
+      .use(http());
+    agent.addEntrypoint({
       key: "echo",
       handler: async ({ input }) => ({
         output: input ?? {},
       }),
     });
-    const { runtime: tanstackRuntime, handlers } = await createTanStackRuntime(runtime);
+    const { runtime: tanstackRuntime, handlers } = await createTanStackRuntime(agent);
 
     expect(typeof tanstackRuntime.entrypoints.add).toBe("function");
     expect(typeof handlers.invoke).toBe("function");

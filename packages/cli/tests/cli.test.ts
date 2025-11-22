@@ -136,7 +136,7 @@ describe('create-agent-kit CLI', () => {
     expect(readme).not.toContain('{{');
 
     // agent.ts uses process.env and extension API
-    expect(agentSrc).toContain('createApp');
+    expect(agentSrc).toContain('createAgent');
     expect(agentSrc).toContain('process.env.AGENT_NAME');
     expect(agentSrc).toContain('process.env.AGENT_VERSION');
     expect(agentSrc).toContain('process.env.AGENT_DESCRIPTION');
@@ -189,7 +189,7 @@ describe('create-agent-kit CLI', () => {
     const readme = await readFile(join(projectDir, 'README.md'), 'utf8');
 
     // agent.ts now uses process.env and extension API
-    expect(agentSrc).toContain('createApp');
+    expect(agentSrc).toContain('createAgent');
     expect(agentSrc).toContain('process.env.AGENT_NAME');
     expect(agentSrc).toContain('process.env.AGENT_VERSION');
     expect(agentSrc).toContain('process.env.AGENT_DESCRIPTION');
@@ -235,7 +235,7 @@ describe('create-agent-kit CLI', () => {
     >;
     const deps = (pkg.dependencies ?? {}) as Record<string, unknown>;
 
-    expect(tanstackAgent).toContain('createApp');
+    expect(tanstackAgent).toContain('createAgent');
     expect(tanstackAgent).toContain('createTanStackRuntime');
     expect(
       Object.prototype.hasOwnProperty.call(deps, '@lucid-agents/tanstack')
@@ -262,7 +262,7 @@ describe('create-agent-kit CLI', () => {
       any
     >;
 
-    expect(agentSrc).toContain('createApp');
+    expect(agentSrc).toContain('createAgent');
     expect(proxySrc).toContain('createNextPaywall');
     expect(pkg.dependencies?.next).toBeDefined();
     expect(pkg.dependencies?.['x402-next']).toBeDefined();

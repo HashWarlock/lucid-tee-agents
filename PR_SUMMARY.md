@@ -21,7 +21,7 @@ const runtime = createAgentRuntime(meta, {
 
 ```typescript
 // Composable extension-based architecture
-const app = await createApp(meta)
+const agent = await createAgent(meta)
   .use(http())
   .use(wallets({ config: { wallets: walletsFromEnv() } }))
   .use(payments({ config: paymentsFromEnv() }))
@@ -35,7 +35,7 @@ const app = await createApp(meta)
 
 ### Extension System
 
-Introduced a new `AppBuilder` class that manages extension registration and builds a consolidated runtime. The builder:
+Introduced a new `AgentBuilder` class that manages extension registration and builds a consolidated runtime. The builder:
 
 - Manages extension registration via `.use(extension)`
 - Builds consolidated runtime with type-safe composition
@@ -169,7 +169,7 @@ Updated all framework adapters (`@lucid-agents/hono`, `@lucid-agents/express`, `
 
 Updated all CLI adapter snippets and templates:
 
-- All adapters use `createApp().use(http()).build()` pattern
+- All adapters use `createAgent().use(http()).build()` pattern
 - Templates (`blank`, `identity`, `axllm`, `axllm-flow`) updated to add `http` extension
 - Template `AGENTS.md` files updated with extension-based examples
 - Environment variable names updated in HTTP extension example code:
@@ -190,7 +190,7 @@ Updated all documentation:
 
 Updated all examples and tests:
 
-- All examples now use `createApp().use().build()` pattern
+- All examples now use `createAgent().use().build()` pattern
 - All tests updated to use extension-based API
 - A2A full integration example verified and working
 - Identity full integration example updated to use extension-based app creation
@@ -211,7 +211,7 @@ const runtime = createAgentRuntime(meta, {
 **After:**
 
 ```typescript
-const app = await createApp(meta)
+const agent = await createAgent(meta)
   .use(http({ landingPage: true }))
   .use(wallets({ config: { wallets: walletsFromEnv() } }))
   .use(payments({ config: paymentsFromEnv() }))
@@ -229,7 +229,7 @@ const httpRuntime = createAgentHttpRuntime(meta, options);
 **After:**
 
 ```typescript
-const app = await createApp(meta).use(http(options)).build();
+const agent = await createAgent(meta).use(http(options)).build();
 // Access handlers via app.handlers
 ```
 
@@ -277,7 +277,7 @@ import {
 **After:**
 
 ```typescript
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { ZodValidationError } from '@lucid-agents/types/core';
 ```
@@ -323,13 +323,13 @@ const runtime = createAgentRuntime(meta, {
 
 ```typescript
 // Option 1: Automatic via extension (recommended)
-const app = await createApp(meta)
+const agent = await createAgent(meta)
   .use(wallets({ config: { wallets: walletsFromEnv() } }))
   .use(identity({ config: identityFromEnv() })) // Auto-creates identity during build
   .build();
 
 // Option 2: Manual creation after build
-const app = await createApp(meta)
+const agent = await createAgent(meta)
   .use(wallets({ config: { wallets: walletsFromEnv() } }))
   .use(identity()) // Extension without auto-create
   .build();

@@ -36,7 +36,7 @@ async function main() {
   console.log('-'.repeat(80));
 
   // Create a minimal runtime with wallet configuration using extensions
-  const runtime = createApp({
+  const agent = await createAgent({
     name: 'test-agent',
     version: '1.0.0',
     description: 'ERC-8004 integration test agent',

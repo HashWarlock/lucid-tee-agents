@@ -1,4 +1,4 @@
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { http } from '@lucid-agents/http';
 import { payments } from '@lucid-agents/payments';
 import { createAgentApp, withPayments } from '@lucid-agents/hono';
@@ -149,12 +149,14 @@ describe('withPayments helper', () => {
 
 describe('manifest building', () => {
   it('caches manifest per origin', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    runtime.entrypoints.add({
-      key: 'initial',
-      description: 'initial entrypoint',
-    });
-    const { app } = await createAgentApp(runtime);
+    const agent = await createAgent(meta)
+      .use(http())
+      .addEntrypoint({
+        key: 'initial',
+        description: 'initial entrypoint',
+      })
+      .build();
+    const { app } = await createAgentApp(agent);
 
     // First request - builds manifest
     const res1 = await app.request('http://agent/.well-known/agent.json');
@@ -176,12 +178,14 @@ describe('manifest building', () => {
   });
 
   it('invalidates manifest cache when entrypoint added before first request', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    runtime.entrypoints.add({
-      key: 'initial',
-      description: 'initial entrypoint',
-    });
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta)
+      .use(http())
+      .addEntrypoint({
+        key: 'initial',
+        description: 'initial entrypoint',
+      })
+      .build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
 
     // Add entrypoint before any requests (Hono limitation)
     addEntrypoint({
@@ -202,14 +206,16 @@ describe('manifest building', () => {
 
 describe('createAgentApp invoke/stream routes', () => {
   it('auto-registers entrypoints passed via options', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    runtime.entrypoints.add({
-      key: 'startup',
-      handler: async ({ input }: { input: any }) => ({
-        output: { echoed: input.value ?? null },
-      }),
-    });
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta)
+      .use(http())
+      .addEntrypoint({
+        key: 'startup',
+        handler: async ({ input }: { input: any }) => ({
+          output: { echoed: input.value ?? null },
+        }),
+      })
+      .build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     expect(typeof addEntrypoint).toBe('function');
     const res = await app.request('http://agent/entrypoints/startup/invoke', {
       method: 'POST',
@@ -222,8 +228,8 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('validates input schema and returns 400 on mismatch', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'echo',
       input: z.object({ text: z.string() }),
@@ -241,8 +247,8 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('returns 501 when handler missing', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({ key: 'noop' });
     const res = await app.request('http://agent/entrypoints/noop/invoke', {
       method: 'POST',
@@ -255,8 +261,8 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('returns handler result and run metadata', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'echo',
       handler: async ({ input }) => ({
@@ -278,7 +284,7 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('surfaces entrypoint price in manifest', async () => {
-    const runtime = await createApp(meta)
+    const agent = await createAgent(meta)
       .use(http())
       .use(
         payments({
@@ -290,7 +296,7 @@ describe('createAgentApp invoke/stream routes', () => {
         })
       )
       .build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const { app, addEntrypoint } = await createAgentApp(agent);
 
     addEntrypoint({
       key: 'priced',
@@ -305,7 +311,7 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('surfaces price in manifest when payments are configured', async () => {
-    const runtime = await createApp(meta)
+    const agent = await createAgent(meta)
       .use(http())
       .use(
         payments({
@@ -317,7 +323,7 @@ describe('createAgentApp invoke/stream routes', () => {
         })
       )
       .build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const { app, addEntrypoint } = await createAgentApp(agent);
 
     addEntrypoint({
       key: 'priced-explicit',
@@ -334,7 +340,7 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('requires payment when entrypoint price is set', async () => {
-    const runtime = await createApp(meta)
+    const agent = await createAgent(meta)
       .use(http())
       .use(
         payments({
@@ -346,7 +352,7 @@ describe('createAgentApp invoke/stream routes', () => {
         })
       )
       .build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const { app, addEntrypoint } = await createAgentApp(agent);
 
     addEntrypoint({
       key: 'paywalled',
@@ -367,7 +373,7 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('auto-paywalls priced entrypoints when payments configured', async () => {
-    const runtime = await createApp(meta)
+    const agent = await createAgent(meta)
       .use(http())
       .use(
         payments({
@@ -379,7 +385,7 @@ describe('createAgentApp invoke/stream routes', () => {
         })
       )
       .build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const { app, addEntrypoint } = await createAgentApp(agent);
 
     addEntrypoint({
       key: 'auto-paywalled',
@@ -400,8 +406,8 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('emits SSE envelopes for stream entrypoint', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'stream',
       stream: async (_ctx, emit) => {
@@ -424,8 +430,8 @@ describe('createAgentApp invoke/stream routes', () => {
   });
 
   it('returns 400 when stream not supported', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'no-stream',
       handler: async () => ({ output: {} }),
@@ -443,8 +449,8 @@ describe('createAgentApp invoke/stream routes', () => {
 
 describe('Zod schema features (defaults, coercions, transformations)', () => {
   it('applies default values from Zod schema in invoke handler', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'with-defaults',
       input: z.object({
@@ -475,8 +481,8 @@ describe('Zod schema features (defaults, coercions, transformations)', () => {
   });
 
   it('applies coercions from Zod schema in invoke handler', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'with-coercion',
       input: z.object({
@@ -506,8 +512,8 @@ describe('Zod schema features (defaults, coercions, transformations)', () => {
   });
 
   it('applies transformations from Zod schema in invoke handler', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'with-transform',
       input: z.object({
@@ -538,8 +544,8 @@ describe('Zod schema features (defaults, coercions, transformations)', () => {
   });
 
   it('applies default values from Zod schema in stream handler', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'stream-defaults',
       input: z.object({
@@ -566,8 +572,8 @@ describe('Zod schema features (defaults, coercions, transformations)', () => {
   });
 
   it('applies transformations from Zod schema in stream handler', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    const { app, addEntrypoint } = await createAgentApp(runtime);
+    const agent = await createAgent(meta).use(http()).build();
+    const { app, addEntrypoint } = await createAgentApp(agent);
     addEntrypoint({
       key: 'stream-transform',
       input: z.object({
@@ -595,22 +601,22 @@ describe('Zod schema features (defaults, coercions, transformations)', () => {
 
 describe('Landing page renderer abstraction', () => {
   it('disabling landing page removes / route entirely', async () => {
-    const runtime = await createApp(meta)
+    const agent = await createAgent(meta)
       .use(http({ landingPage: false }))
+      .addEntrypoint({ key: 'test' })
       .build();
-    runtime.entrypoints.add({ key: 'test' });
-    const { app } = await createAgentApp(runtime);
+    const { app } = await createAgentApp(agent);
 
     const res = await app.request('http://agent/');
     expect(res.status).toBe(404);
   });
 
   it('enables landing page when landingPage option is true', async () => {
-    const runtime = await createApp(meta)
+    const agent = await createAgent(meta)
       .use(http({ landingPage: true }))
+      .addEntrypoint({ key: 'test' })
       .build();
-    runtime.entrypoints.add({ key: 'test' });
-    const { app } = await createAgentApp(runtime);
+    const { app } = await createAgentApp(agent);
 
     const res = await app.request('http://agent/');
     expect(res.status).toBe(200);
@@ -619,9 +625,11 @@ describe('Landing page renderer abstraction', () => {
   });
 
   it('default renderer handles minimal entrypoint configuration', async () => {
-    const runtime = await createApp(meta).use(http()).build();
-    runtime.entrypoints.add({ key: 'minimal' });
-    const { app } = await createAgentApp(runtime);
+    const agent = await createAgent(meta)
+      .use(http())
+      .addEntrypoint({ key: 'minimal' })
+      .build();
+    const { app } = await createAgentApp(agent);
 
     const res = await app.request('http://agent/');
     expect(res.status).toBe(200);

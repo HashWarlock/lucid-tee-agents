@@ -12,8 +12,8 @@ export {
 } from './config/config';
 export { AgentCore, createAgentCore } from './core/agent';
 export type { Network } from './core/types';
-export { AppBuilder } from './extensions/builder';
-export { createApp } from './runtime';
+export { AgentBuilder } from './extensions/builder';
+export { createAgent } from './runtime';
 export * from './utils';
 export { validateAgentMetadata } from './validation';
 export type {

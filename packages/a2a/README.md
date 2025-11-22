@@ -22,10 +22,10 @@ bun add @lucid-agents/a2a
 ### Building Agent Cards
 
 ```typescript
-import { createApp } from '@lucid-agents/core';
+import { createAgent } from '@lucid-agents/core';
 import { a2a } from '@lucid-agents/a2a';
 
-const runtime = createApp({
+const agent = await createAgent({
   name: 'my-agent',
   version: '1.0.0',
 })
