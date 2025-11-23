@@ -33,13 +33,19 @@ payments/AP2/trust for later.
 
 ```ts
 import { z } from 'zod';
-import { createAgentApp } from '@lucid/agent-kit';
+import { createAgent } from '@lucid-agents/core';
+import { http } from '@lucid-agents/http';
+import { createAgentApp } from '@lucid-agents/hono';
 
-const { app, addEntrypoint } = createAgentApp({
+const agent = await createAgent({
   name: 'hello-agent',
   version: '0.1.0',
   description: 'Echoes whatever you pass in',
-});
+})
+  .use(http())
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 addEntrypoint({
   key: 'echo',
@@ -68,37 +74,36 @@ them automatically.
 
 ```ts
 import { z } from 'zod';
-import { createAgentApp } from '@lucid/agent-kit';
+import { createAgent } from '@lucid-agents/core';
+import { http } from '@lucid-agents/http';
+import { payments } from '@lucid-agents/payments';
+import { ap2 } from '@lucid-agents/ap2';
+import { identity } from '@lucid-agents/identity';
+import { createAgentApp } from '@lucid-agents/hono';
 
-const { app, addEntrypoint } = createAgentApp(
-  {
-    name: 'paid-agent',
-    version: '0.2.0',
-    description: 'Demonstrates payments + streaming',
-  },
-  {
-    config: {
-      payments: {
-        facilitatorUrl: 'https://facilitator.example',
-        payTo: '0xabc0000000000000000000000000000000000000',
-        network: 'base-sepolia',
-      },
-      wallet: {
-        apiBaseUrl: 'https://api.example',
-      },
-    },
-    payments: {
+const agent = await createAgent({
+  name: 'paid-agent',
+  version: '0.2.0',
+  description: 'Demonstrates payments + streaming',
+})
+  .use(http())
+  .use(
+    payments({
       payTo: '0xabc0000000000000000000000000000000000000',
       network: 'base-sepolia',
       facilitatorUrl: 'https://facilitator.daydreams.systems',
-    },
-    ap2: { roles: ['merchant', 'shopper'] },
-    trust: {
+    })
+  )
+  .use(ap2({ roles: ['merchant', 'shopper'] }))
+  .use(
+    identity({
       trustModels: ['feedback'],
       registrations: [{ agentId: 1, agentAddress: 'eip155:8453:0xabc' }],
-    },
-  }
-);
+    })
+  )
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 addEntrypoint({
   key: 'echo',
@@ -148,14 +153,22 @@ fetch + signer wiring backed by the agent wallet.
 Agent landing pages automatically include Open Graph meta tags for better social sharing and x402scan discovery. Add optional `image`, `url`, and `type` fields to your `AgentMeta`:
 
 ```ts
-const { app, addEntrypoint } = createAgentApp({
+import { createAgent } from '@lucid-agents/core';
+import { http } from '@lucid-agents/http';
+import { createAgentApp } from '@lucid-agents/hono';
+
+const agent = await createAgent({
   name: 'My AI Agent',
   version: '1.0.0',
   description: 'AI-powered image processing for $0.10 per request',
   image: 'https://my-agent.com/og-image.png', // Preview image (1200x630px recommended)
   url: 'https://my-agent.com', // Canonical URL
   type: 'website', // OG type (defaults to 'website')
-});
+})
+  .use(http())
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 ```
 
 **What this enables:**
@@ -183,7 +196,7 @@ All fields are optional. If `url` is not provided, it defaults to the agent's or
 - `/.well-known/agent.json` — Manifest with schemas and pricing (if configured)
   - Alias: `/.well-known/agent-card.json` (A2A preferred well-known path)
   - Includes `skills[]` for A2A, back-compat `entrypoints` block, and `payments[]` when configured.
-  - Includes `capabilities.extensions` entry advertising AP2 when `ap2` or `payments` are configured.
+  - Includes `capabilities.extensions` entry advertising AP2 when explicitly configured via `ap2()` extension.
 - `/entrypoints/:key/invoke` — POST `{ input }` → `{ run_id, status, output?, usage?, model? }`
 - `/entrypoints/:key/stream` — POST `{ input }` → SSE stream
   - Events: `run-start`, `delta`, `text`, `asset`, `control`, `error`, `run-end`
@@ -360,7 +373,7 @@ import type {
 Key shapes:
 
 - `EntrypointDef`: `{ key, description?, input?, output?, streaming?, price?, network?, handler?, stream? }`
-- `AgentContext`: `{ key, input, signal, headers, runId }`
+- `AgentContext`: `{ key, input, signal, metadata?, runId?, runtime? }`
 - `PaymentsConfig`: `{ payTo, facilitatorUrl, network }`
 - `CreateAgentAppOptions`: `{ config?, payments?, ap2?, trust?, entrypoints? }`
 - `CreateAgentAppReturn<TApp>`: `{ app: TApp, runtime, agent, addEntrypoint, config }` (generic type in `@lucid-agents/types/core`)
@@ -404,20 +417,27 @@ Required env for `paymentsFromEnv`:
 Example configuration for accepting Solana payments:
 
 ```ts
-const { app, addEntrypoint } = createAgentApp(
-  {
-    name: 'solana-agent',
-    version: '1.0.0',
-    description: 'Agent accepting Solana USDC',
-  },
-  {
-    payments: {
+import { createAgent } from '@lucid-agents/core';
+import { http } from '@lucid-agents/http';
+import { payments } from '@lucid-agents/payments';
+import { createAgentApp } from '@lucid-agents/hono';
+
+const agent = await createAgent({
+  name: 'solana-agent',
+  version: '1.0.0',
+  description: 'Agent accepting Solana USDC',
+})
+  .use(http())
+  .use(
+    payments({
       payTo: '9yPGxVrYi7C5JLMGjEZhK8qQ4tn7SzMWwQHvz3vGJCKz', // Solana Base58 address
       network: 'solana-devnet',
       facilitatorUrl: 'https://facilitator.daydreams.systems',
-    },
-  }
-);
+    })
+  )
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 addEntrypoint({
   key: 'translate',

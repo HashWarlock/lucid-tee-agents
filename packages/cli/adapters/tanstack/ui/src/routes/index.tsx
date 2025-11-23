@@ -45,42 +45,47 @@ function ensureSerializable<T>(obj: T): T {
 export const Route = createFileRoute('/')({
   loader: async () => {
     'use server';
-    const agentModule = await import('@/lib/agent');
-    const { agent } = agentModule;
+    const { agent, runtime } = await import('@/lib/agent');
 
     // Get manifest to extract schemas
-    const manifest = agent.resolveManifest('http://localhost', '/api/agent');
-    const manifestEntrypoints = manifest.entrypoints || [];
+    const manifest = runtime.manifest.build('http://localhost');
+    const manifestEntrypoints = manifest.entrypoints || {};
 
     const rawEntrypoints = agent.listEntrypoints();
-    const entrypoints: DashboardEntry[] = rawEntrypoints.map(entry => {
-      // Find corresponding manifest entry for schema info
-      const manifestEntry = manifestEntrypoints.find(
-        (e: any) => e.key === entry.key
-      );
+    const entrypoints: DashboardEntry[] = rawEntrypoints.map(
+      (entry: {
+        key: string;
+        description?: string;
+        stream?: boolean;
+        price?: any;
+        network?: string;
+      }) => {
+        // Find corresponding manifest entry for schema info
+        const manifestEntry = manifestEntrypoints[entry.key];
 
-      return {
-        key: String(entry.key),
-        description: entry.description ? String(entry.description) : null,
-        streaming: Boolean(entry.stream),
-        price:
-          typeof entry.price === 'string'
-            ? String(entry.price)
-            : entry.price
-              ? {
-                  invoke: entry.price.invoke
-                    ? String(entry.price.invoke)
-                    : null,
-                  stream: entry.price.stream
-                    ? String(entry.price.stream)
-                    : null,
-                }
-              : null,
-        network: entry.network ? String(entry.network) : null,
-        inputSchema: manifestEntry?.input || null,
-        outputSchema: manifestEntry?.output || null,
-      };
-    });
+        return {
+          key: String(entry.key),
+          description: entry.description ? String(entry.description) : null,
+          streaming: Boolean(entry.stream),
+          price:
+            typeof entry.price === 'string'
+              ? String(entry.price)
+              : entry.price
+                ? {
+                    invoke: entry.price.invoke
+                      ? String(entry.price.invoke)
+                      : null,
+                    stream: entry.price.stream
+                      ? String(entry.price.stream)
+                      : null,
+                  }
+                : null,
+          network: entry.network ? String(entry.network) : null,
+          inputSchema: manifestEntry?.input_schema || null,
+          outputSchema: manifestEntry?.output_schema || null,
+        };
+      }
+    );
 
     const configPayments = agent.config.payments;
     const payments: AgentPayments | null =
@@ -460,9 +465,7 @@ function HomePage() {
 
       if (entry.requiresPayment) {
         try {
-          const network = getNetworkInfo(
-            entry.networkId ?? payments?.network ?? undefined
-          );
+          getNetworkInfo(entry.networkId ?? payments?.network ?? undefined);
 
           if (walletClient) {
             signer = walletClient;
@@ -516,9 +519,7 @@ function HomePage() {
       let signer: unknown = undefined;
       if (entry.requiresPayment) {
         try {
-          const network = getNetworkInfo(
-            entry.networkId ?? payments?.network ?? undefined
-          );
+          getNetworkInfo(entry.networkId ?? payments?.network ?? undefined);
           if (walletClient) {
             signer = walletClient;
             // Streaming does not mark payment used up-front; chunk handlers show success.
@@ -579,10 +580,6 @@ function HomePage() {
     };
   }, []);
 
-  const exampleCard = cards?.[0];
-  const exampleInvokeUrl = exampleCard
-    ? `${origin}${exampleCard.invokePath}`
-    : `${origin}/api/agent/entrypoints/{key}/invoke`;
   const networkInfo = getNetworkInfo(payments?.network ?? undefined);
 
   const appKitSnippet = [
@@ -782,7 +779,7 @@ function HomePage() {
                   </div>
 
                   <SchemaForm
-                    schema={card.inputSchema}
+                    schema={card.inputSchema as any}
                     value={state.payload}
                     onChange={value =>
                       updateEntryState(card.key, { payload: value })

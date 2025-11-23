@@ -1,19 +1,31 @@
 import { createFileRoute } from '@tanstack/react-router';
+
 import { getNetworkInfo } from '@/lib/network';
 
 export const Route = createFileRoute('/')({
   loader: async () => {
     'use server';
-    const { agent } = await import('@/lib/agent');
-    const manifest = agent.resolveManifest('http://localhost', '/api/agent');
-    const entrypoints = agent.listEntrypoints().map(entry => ({
-      key: String(entry.key),
-      description: entry.description ? String(entry.description) : null,
-      streaming: Boolean(entry.stream),
-      price:
-        entry.price ??
-        manifest.entrypoints?.find((e: any) => e.key === entry.key)?.price,
-    }));
+    const { agent, runtime } = await import('@/lib/agent');
+    const manifest = runtime.manifest.build('http://localhost');
+    const manifestEntrypoints = manifest.entrypoints || {};
+    const entrypoints = agent
+      .listEntrypoints()
+      .map(
+        (entry: {
+          key: string;
+          description?: string;
+          stream?: boolean;
+          price?: any;
+        }) => {
+          const manifestEntry = manifestEntrypoints[entry.key];
+          return {
+            key: String(entry.key),
+            description: entry.description ? String(entry.description) : null,
+            streaming: Boolean(entry.stream),
+            price: entry.price ?? manifestEntry?.pricing?.invoke ?? null,
+          };
+        }
+      );
 
     return {
       meta: {
@@ -27,11 +39,8 @@ export const Route = createFileRoute('/')({
   component: HeadlessDashboard,
 });
 
-function HeadlessDashboard({
-  loaderData,
-}: {
-  loaderData: Awaited<ReturnType<typeof Route.loader>>;
-}) {
+function HeadlessDashboard() {
+  const loaderData = Route.useLoaderData();
   const network = getNetworkInfo();
 
   return (
@@ -63,21 +72,28 @@ function HeadlessDashboard({
       <div className="space-y-2">
         <p className="text-xs font-semibold text-slate-400">Entrypoints</p>
         <ol className="space-y-2 text-sm text-slate-100">
-          {loaderData.entrypoints.map(entry => (
-            <li
-              key={entry.key}
-              className="rounded border border-slate-800/80 bg-slate-900/40 p-3"
-            >
-              <p className="font-medium">{entry.key}</p>
-              {entry.description ? (
-                <p className="text-slate-400">{entry.description}</p>
-              ) : null}
-              <p className="text-xs text-slate-500">
-                Streaming: {entry.streaming ? 'yes' : 'no'} · Price:{' '}
-                {entry.price ?? 'free'}
-              </p>
-            </li>
-          ))}
+          {loaderData.entrypoints.map(
+            (entry: {
+              key: string;
+              description?: string | null;
+              streaming: boolean;
+              price?: string | null;
+            }) => (
+              <li
+                key={entry.key}
+                className="rounded border border-slate-800/80 bg-slate-900/40 p-3"
+              >
+                <p className="font-medium">{entry.key}</p>
+                {entry.description ? (
+                  <p className="text-slate-400">{entry.description}</p>
+                ) : null}
+                <p className="text-xs text-slate-500">
+                  Streaming: {entry.streaming ? 'yes' : 'no'} · Price:{' '}
+                  {entry.price ?? 'free'}
+                </p>
+              </li>
+            )
+          )}
         </ol>
       </div>
 
