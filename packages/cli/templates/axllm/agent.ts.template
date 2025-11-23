@@ -1,17 +1,18 @@
-{{ADAPTER_IMPORTS}}
+{{TEMPLATE_IMPORTS}}
+import { createAgent } from "@lucid-agents/core";
 import { http } from "@lucid-agents/http";
 import { createAxLLMClient } from "@lucid-agents/core/axllm";
+import { payments, paymentsFromEnv } from "@lucid-agents/payments";
 
-{{ADAPTER_PRE_SETUP}}
-
-if (process.env.PAYMENTS_RECEIVABLE_ADDRESS) {
-  const { payments } = await import("@lucid-agents/payments");
-  agent.use(payments({
-    facilitatorUrl: process.env.PAYMENTS_FACILITATOR_URL as `${string}://${string}`,
-    payTo: process.env.PAYMENTS_RECEIVABLE_ADDRESS as `0x${string}`,
-    network: process.env.PAYMENTS_NETWORK as any,
-  }));
-}
+{{TEMPLATE_PRE_SETUP}}
+const agent = await createAgent({
+  name: process.env.AGENT_NAME ?? "my-agent",
+  version: process.env.AGENT_VERSION ?? "0.1.0",
+  description: process.env.AGENT_DESCRIPTION,
+})
+  .use(http())
+  .use(payments({ config: paymentsFromEnv() }))
+  .build();
 
 const axClient = createAxLLMClient({
   logger: {
@@ -31,5 +32,5 @@ if (!axClient.isConfigured()) {
   );
 }
 
-{{ADAPTER_POST_SETUP}}
+{{TEMPLATE_POST_SETUP}}
 

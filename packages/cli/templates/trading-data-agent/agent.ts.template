@@ -1,10 +1,9 @@
-{{ADAPTER_IMPORTS}}
-
+{{TEMPLATE_IMPORTS}}
 import { paymentsFromEnv } from '@lucid-agents/payments';
 
 const payments = paymentsFromEnv();
 
-{{ADAPTER_PRE_SETUP}}
+{{TEMPLATE_PRE_SETUP}}
 const appOptions = {
   payments: payments || {
     facilitatorUrl: process.env.PAYMENTS_FACILITATOR_URL as `${string}://${string}`,
@@ -14,7 +13,7 @@ const appOptions = {
   ap2: payments ? { roles: ['merchant'], required: true } : undefined,
 };
 
-{{ADAPTER_POST_SETUP}}
+{{TEMPLATE_POST_SETUP}}
 
 /**
  * Trading Data Agent - Provides mock trading data

@@ -11,14 +11,15 @@ const meta = {
 
 describe("createTanStackRuntime", () => {
   it("exposes tanstack handlers alongside the core runtime", async () => {
-    const agent = createAgent(meta)
-      .use(http());
-    agent.addEntrypoint({
-      key: "echo",
-      handler: async ({ input }) => ({
-        output: input ?? {},
-      }),
-    });
+    const agent = await createAgent(meta)
+      .use(http())
+      .addEntrypoint({
+        key: "echo",
+        handler: async ({ input }) => ({
+          output: input ?? {},
+        }),
+      })
+      .build();
     const { runtime: tanstackRuntime, handlers } = await createTanStackRuntime(agent);
 
     expect(typeof tanstackRuntime.entrypoints.add).toBe("function");

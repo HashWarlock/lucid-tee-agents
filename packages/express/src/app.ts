@@ -34,16 +34,14 @@ export type CreateAgentAppOptions = {
 };
 
 export async function createAgentApp(
-  agent: AgentBuilder,
-  opts?: CreateAgentAppOptions & { config?: import('@lucid-agents/types/core').AgentKitConfig }
+  runtime: AgentRuntime,
+  opts?: CreateAgentAppOptions
 ): Promise<CreateAgentAppReturn<
   Express,
   AgentRuntime,
   AgentRuntime['agent'],
   AgentRuntime['config']
 >> {
-  // Build the agent runtime with optional config
-  const runtime: AgentRuntime = await agent.build(opts?.config);
 
   // Require HTTP extension - runtime must have handlers
   if (!runtime.handlers) {

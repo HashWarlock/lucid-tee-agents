@@ -6,12 +6,13 @@ import { z } from 'zod';
 
 describe('@lucid-agents/express', () => {
   it('creates an Express app and registers entrypoints', async () => {
-    const agent = createAgent({
+    const agent = await createAgent({
       name: 'express-agent',
       version: '1.0.0',
       description: 'Test agent',
     })
-      .use(http());
+      .use(http())
+      .build();
     const { app, addEntrypoint } = await createAgentApp(agent);
 
     expect(typeof app).toBe('function');

@@ -1,5 +1,4 @@
-{{ADAPTER_IMPORTS}}
-
+{{TEMPLATE_IMPORTS}}
 import {
   fetchAndSendMessage,
   type Task,
@@ -7,7 +6,7 @@ import {
 } from '@lucid-agents/a2a';
 import { createRuntimePaymentContext } from '@lucid-agents/payments';
 
-{{ADAPTER_PRE_SETUP}}
+{{TEMPLATE_PRE_SETUP}}
 const appOptions = {
   // Recommendation agent doesn't receive payments, but needs wallet to pay for data
   config: {
@@ -22,7 +21,7 @@ const appOptions = {
   },
 };
 
-{{ADAPTER_POST_SETUP}}
+{{TEMPLATE_POST_SETUP}}
 
 /**
  * Trading Recommendation Agent - Buys data and generates trading signals

@@ -32,26 +32,19 @@ const adapterDefinitions: Record<string, AdapterDefinition> = {
     filesDir: join(ADAPTER_FILES_ROOT, 'hono'),
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
-      imports: `import { createAgent } from "@lucid-agents/core";
-import { http } from "@lucid-agents/http";
-import { createAgentApp } from "@lucid-agents/hono";`,
-      preSetup: `const agentBuilder = createAgent({
-  name: process.env.AGENT_NAME,
-  version: process.env.AGENT_VERSION,
-  description: process.env.AGENT_DESCRIPTION,
+      imports: `import { createAgentApp } from "@lucid-agents/hono";`,
+      preSetup: ``,
+      appCreation: `const { app, addEntrypoint } = await createAgentApp(agent);`,
+      entrypointRegistration: `const inputSchema = z.object({
+  text: z.string().min(1, "Please provide some text."),
 });
 
-agentBuilder.use(http());`,
-      appCreation: `const agent = await agentBuilder.build();
-
-const { app, addEntrypoint } = await createAgentApp(agent);`,
-      entrypointRegistration: `addEntrypoint({
+addEntrypoint({
   key: "echo",
   description: "Echo input text",
-  input: z.object({
-    text: z.string().min(1, "Please provide some text."),
-  }),
-  handler: async ({ input }) => {
+  input: inputSchema,
+  handler: async (ctx) => {
+    const input = ctx.input as z.infer<typeof inputSchema>;
     return {
       output: {
         text: input.text,
@@ -69,24 +62,19 @@ const { app, addEntrypoint } = await createAgentApp(agent);`,
     filesDir: join(ADAPTER_FILES_ROOT, 'express'),
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
-      imports: `import { createAgent } from "@lucid-agents/core";
-import { http } from "@lucid-agents/http";
-import { createAgentApp } from "@lucid-agents/express";`,
-      preSetup: `const agent = createAgent({
-  name: process.env.AGENT_NAME,
-  version: process.env.AGENT_VERSION,
-  description: process.env.AGENT_DESCRIPTION,
+      imports: `import { createAgentApp } from "@lucid-agents/express";`,
+      preSetup: ``,
+      appCreation: `const { app, addEntrypoint } = await createAgentApp(agent);`,
+      entrypointRegistration: `const inputSchema = z.object({
+  text: z.string().min(1, "Please provide some text."),
 });
 
-agent.use(http());`,
-      appCreation: `const { app, addEntrypoint } = await createAgentApp(agent);`,
-      entrypointRegistration: `addEntrypoint({
+addEntrypoint({
   key: "echo",
   description: "Echo input text",
-  input: z.object({
-    text: z.string().min(1, "Please provide some text."),
-  }),
-  handler: async ({ input }) => {
+  input: inputSchema,
+  handler: async (ctx) => {
+    const input = ctx.input as z.infer<typeof inputSchema>;
     return {
       output: {
         text: input.text,
@@ -104,26 +92,21 @@ agent.use(http());`,
     filesDir: join(ADAPTER_FILES_ROOT, 'tanstack', 'ui'),
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
-      imports: `import { createAgent } from "@lucid-agents/core";
-import { http } from "@lucid-agents/http";
-import { createTanStackRuntime } from "@lucid-agents/tanstack";`,
-      preSetup: `const agent = createAgent({
-  name: process.env.AGENT_NAME,
-  version: process.env.AGENT_VERSION,
-  description: process.env.AGENT_DESCRIPTION,
-});
-
-agent.use(http());`,
+      imports: `import { createTanStackRuntime } from "@lucid-agents/tanstack";`,
+      preSetup: ``,
       appCreation: `const tanstack = await createTanStackRuntime(agent);
 
 const { handlers, runtime } = tanstack;`,
-      entrypointRegistration: `runtime.entrypoints.add({
+      entrypointRegistration: `const inputSchema = z.object({
+  text: z.string().min(1, "Please provide some text."),
+});
+
+runtime.entrypoints.add({
   key: "echo",
   description: "Echo input text",
-  input: z.object({
-    text: z.string().min(1, "Please provide some text."),
-  }),
-  handler: async ({ input }) => {
+  input: inputSchema,
+  handler: async (ctx) => {
+    const input = ctx.input as z.infer<typeof inputSchema>;
     return {
       output: {
         text: input.text,
@@ -132,7 +115,7 @@ const { handlers, runtime } = tanstack;`,
   },
 });`,
       postSetup: ``,
-      exports: `export { agent: runtime.agent, handlers, app: runtime };`,
+      exports: `export { agent, handlers, runtime };`,
     },
   },
   'tanstack-headless': {
@@ -141,26 +124,21 @@ const { handlers, runtime } = tanstack;`,
     filesDir: join(ADAPTER_FILES_ROOT, 'tanstack', 'headless'),
     placeholderTargets: ['src/lib/agent.ts.template'],
     snippets: {
-      imports: `import { createAgent } from "@lucid-agents/core";
-import { http } from "@lucid-agents/http";
-import { createTanStackRuntime } from "@lucid-agents/tanstack";`,
-      preSetup: `const agent = createAgent({
-  name: process.env.AGENT_NAME,
-  version: process.env.AGENT_VERSION,
-  description: process.env.AGENT_DESCRIPTION,
-});
-
-agent.use(http());`,
+      imports: `import { createTanStackRuntime } from "@lucid-agents/tanstack";`,
+      preSetup: ``,
       appCreation: `const tanstack = await createTanStackRuntime(agent);
 
 const { handlers, runtime } = tanstack;`,
-      entrypointRegistration: `runtime.entrypoints.add({
+      entrypointRegistration: `const inputSchema = z.object({
+  text: z.string().min(1, "Please provide some text."),
+});
+
+runtime.entrypoints.add({
   key: "echo",
   description: "Echo input text",
-  input: z.object({
-    text: z.string().min(1, "Please provide some text."),
-  }),
-  handler: async ({ input }) => {
+  input: inputSchema,
+  handler: async (ctx) => {
+    const input = ctx.input as z.infer<typeof inputSchema>;
     return {
       output: {
         text: input.text,
@@ -169,7 +147,7 @@ const { handlers, runtime } = tanstack;`,
   },
 });`,
       postSetup: ``,
-      exports: `export { agent: runtime.agent, handlers, app: runtime };`,
+      exports: `export { agent, handlers, runtime };`,
     },
   },
   next: {
@@ -178,29 +156,23 @@ const { handlers, runtime } = tanstack;`,
     filesDir: join(ADAPTER_FILES_ROOT, 'next'),
     placeholderTargets: ['lib/agent.ts.template'],
     snippets: {
-      imports: `import { createAgent } from "@lucid-agents/core";
-import { http } from "@lucid-agents/http";`,
-      preSetup: `const agent = createAgent({
-  name: process.env.AGENT_NAME,
-  version: process.env.AGENT_VERSION,
-  description: process.env.AGENT_DESCRIPTION,
-});
-
-agent.use(http());`,
-      appCreation: `const builtAgent = await agent.build();
-
-const { agent: agentCore, handlers, entrypoints } = builtAgent;
+      imports: ``,
+      preSetup: ``,
+      appCreation: `const { agent: agentCore, handlers, entrypoints } = agent;
 
 const addEntrypoint = (def: typeof entrypoints.snapshot()[number]) => {
   entrypoints.add(def);
 };`,
-      entrypointRegistration: `addEntrypoint({
+      entrypointRegistration: `const inputSchema = z.object({
+  text: z.string().min(1, "Please provide some text."),
+});
+
+addEntrypoint({
   key: "echo",
   description: "Echo input text",
-  input: z.object({
-    text: z.string().min(1, "Please provide some text."),
-  }),
-  handler: async ({ input }) => {
+  input: inputSchema,
+  handler: async (ctx) => {
+    const input = ctx.input as z.infer<typeof inputSchema>;
     return {
       output: {
         text: input.text,
@@ -209,7 +181,7 @@ const addEntrypoint = (def: typeof entrypoints.snapshot()[number]) => {
   },
 });`,
       postSetup: ``,
-      exports: `export { agent: agentCore, handlers, app: builtAgent };`,
+      exports: `export { agent: agentCore, handlers, app: agent };`,
     },
   },
 };

@@ -891,9 +891,9 @@ type TemplateMetadata = {
 
 function parseTemplateSections(content: string): Record<string, string> {
   const markers = [
-    '{{ADAPTER_IMPORTS}}',
-    '{{ADAPTER_PRE_SETUP}}',
-    '{{ADAPTER_POST_SETUP}}',
+    '{{TEMPLATE_IMPORTS}}',
+    '{{TEMPLATE_PRE_SETUP}}',
+    '{{TEMPLATE_POST_SETUP}}',
   ] as const;
 
   for (const marker of markers) {
@@ -932,18 +932,18 @@ function mergeAdapterAndTemplate(
 ): string {
   const parts: string[] = [
     'import { z } from "zod";',
-    adapterSnippets.imports,
-    templateSections['{{ADAPTER_IMPORTS}}'] || '',
+    adapterSnippets.imports, // Adapter-specific imports
+    templateSections['{{TEMPLATE_IMPORTS}}'] || '', // Template imports (createAgent, http, etc.)
     '',
     adapterSnippets.preSetup,
-    templateSections['{{ADAPTER_PRE_SETUP}}'] || '',
+    templateSections['{{TEMPLATE_PRE_SETUP}}'] || '',
     '',
     adapterSnippets.appCreation,
     '',
     adapterSnippets.entrypointRegistration,
     '',
     adapterSnippets.postSetup,
-    templateSections['{{ADAPTER_POST_SETUP}}'] || '',
+    templateSections['{{TEMPLATE_POST_SETUP}}'] || '',
     '',
     adapterSnippets.exports,
   ];
@@ -1057,12 +1057,12 @@ function buildTemplateReplacements(params: {
     PACKAGE_NAME: packageName,
     ADAPTER_ID: adapter.id,
     ADAPTER_DISPLAY_NAME: adapter.displayName,
-    ADAPTER_IMPORTS: snippets.imports,
-    ADAPTER_PRE_SETUP: snippets.preSetup,
-    ADAPTER_APP_CREATION: snippets.appCreation,
-    ADAPTER_ENTRYPOINT_REGISTRATION: snippets.entrypointRegistration,
-    ADAPTER_POST_SETUP: snippets.postSetup,
-    ADAPTER_EXPORTS: snippets.exports,
+    TEMPLATE_IMPORTS: snippets.imports,
+    TEMPLATE_PRE_SETUP: snippets.preSetup,
+    TEMPLATE_APP_CREATION: snippets.appCreation,
+    TEMPLATE_ENTRYPOINT_REGISTRATION: snippets.entrypointRegistration,
+    TEMPLATE_POST_SETUP: snippets.postSetup,
+    TEMPLATE_EXPORTS: snippets.exports,
     ...(adapter.buildReplacements
       ? adapter.buildReplacements({
           answers,
