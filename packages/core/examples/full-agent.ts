@@ -12,10 +12,8 @@
 
 import { z } from 'zod';
 import { createAgentApp } from '@lucid-agents/hono';
-import {
-  createRuntimePaymentContext,
-  type AgentKitConfig,
-} from '@lucid-agents/core';
+import { createRuntimePaymentContext } from '@lucid-agents/core';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import {
   createAgentIdentity,
   getTrustConfig,
@@ -254,16 +252,14 @@ async function main() {
       );
     }
 
-    const configOverrides: AgentKitConfig = {
-      payments: {
-        facilitatorUrl:
-          (process.env.FACILITATOR_URL as any) ??
-          'https://facilitator.daydreams.systems',
-        payTo:
-          (process.env.PAYMENTS_RECEIVABLE_ADDRESS as `0x${string}`) ??
-          '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
-        network: (process.env.NETWORK as any) ?? 'base-sepolia',
-      },
+    const paymentsConfig: PaymentsConfig = {
+      facilitatorUrl:
+        (process.env.FACILITATOR_URL as any) ??
+        'https://facilitator.daydreams.systems',
+      payTo:
+        (process.env.PAYMENTS_RECEIVABLE_ADDRESS as `0x${string}`) ??
+        '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+      network: (process.env.NETWORK as any) ?? 'base-sepolia',
     };
 
     const { app, addEntrypoint } = createAgentApp(
@@ -274,8 +270,7 @@ async function main() {
           'Demonstrates every feature exposed by @lucid/agent-kit. A2A, x402, ERC-8004, and more.',
       },
       {
-        config: configOverrides,
-        payments: configOverrides.payments,
+        payments: paymentsConfig,
         ap2: {
           roles: ['merchant', 'shopper'],
           description: 'Supports dual-role AP2 interactions',
@@ -340,7 +335,7 @@ async function main() {
 
     const runtimeBootstrap = await setupAgentRuntime({
       fetchImpl: typeof fetch === 'function' ? fetch : undefined,
-      network: configOverrides.payments?.network,
+      network: paymentsConfig?.network,
     });
 
     if (runtimeBootstrap) {

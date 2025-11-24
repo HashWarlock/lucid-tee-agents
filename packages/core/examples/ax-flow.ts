@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createAgentApp } from '@lucid-agents/hono';
-import { AgentKitConfig, createAxLLMClient } from '@lucid-agents/core';
+import { createAxLLMClient } from '@lucid-agents/core';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { flow } from '@ax-llm/ax';
 
 /**
@@ -54,12 +55,10 @@ const brainstormingFlow = flow<{ topic: string }>()
       : [],
   }));
 
-const config: AgentKitConfig = {
-  payments: {
-    payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
-    network: 'base',
-    defaultPrice: process.env.DEFAULT_PRICE ?? '0.03',
-  },
+const paymentsConfig: PaymentsConfig = {
+  payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+  network: 'base',
+  defaultPrice: process.env.DEFAULT_PRICE ?? '0.03',
 };
 
 const { app, addEntrypoint } = createAgentApp(
@@ -70,7 +69,7 @@ const { app, addEntrypoint } = createAgentApp(
       'Demonstrates driving an AxFlow pipeline through createAxLLMClient.',
   },
   {
-    config,
+    payments: paymentsConfig,
   }
 );
 

@@ -6,10 +6,9 @@ import { payments } from '@lucid-agents/payments';
 import type { AgentRuntime } from '@lucid-agents/types/core';
 import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { wallets } from '@lucid-agents/wallet';
-import { afterEach, describe, expect, it, mock } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
 import { z } from 'zod';
 
-import { resetAgentKitConfigForTesting } from '../config/config';
 import { createAgent } from '../runtime';
 
 const makeRuntimeStub = (): {
@@ -65,10 +64,6 @@ const paymentRequirements = {
 };
 
 describe('runtime payments', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('wraps fetch with x402 handling using the runtime wallet', async () => {
     const { runtime, calls } = makeRuntimeStub();
 
@@ -161,10 +156,6 @@ describe('runtime payments', () => {
 });
 
 describe('runtime Solana payments', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('accepts Solana network configuration', async () => {
     const solanaNetworks = ['solana', 'solana-devnet'] as const;
 
@@ -206,10 +197,6 @@ describe('runtime Solana payments', () => {
 });
 
 describe('createAgent payments activation', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   const paymentsConfig: PaymentsConfig = {
     payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
     facilitatorUrl: 'https://facilitator.test',
@@ -404,10 +391,6 @@ describe('createAgent payments activation', () => {
 });
 
 describe('createAgentRuntime wallets', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('creates wallets from config when provided', async () => {
     const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(
@@ -480,40 +463,7 @@ describe('createAgentRuntime wallets', () => {
   });
 });
 
-describe('createAgentRuntime config resolution', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
-  it('uses provided config', async () => {
-    const customConfig = {
-      payments: {
-        payTo: '0xCustomAddress',
-        facilitatorUrl: 'https://custom-facilitator.test' as const,
-        network: 'base-sepolia' as const,
-      },
-    };
-
-    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build(
-      customConfig
-    );
-
-    expect(agent.config.payments?.payTo).toBe('0xCustomAddress');
-  });
-
-  it('returns resolved config', async () => {
-    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
-
-    expect(agent.config).toBeDefined();
-    expect(typeof agent.config).toBe('object');
-  });
-});
-
 describe('createAgentRuntime entrypoints', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('initializes entrypoints from options', async () => {
     const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.addEntrypoint({
@@ -586,10 +536,6 @@ describe('createAgentRuntime entrypoints', () => {
 });
 
 describe('createAgentRuntime manifest', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('builds manifest with correct origin', async () => {
     const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
@@ -662,10 +608,6 @@ describe('createAgentRuntime manifest', () => {
 });
 
 describe('createAgentRuntime integration', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('handles full flow: config → wallets → payments → entrypoints → manifest', async () => {
     const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.use(

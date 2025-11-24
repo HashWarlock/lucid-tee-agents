@@ -26,8 +26,7 @@ export async function createAgentApp(
   CreateAgentAppReturn<
     Hono,
     AgentRuntime,
-    AgentRuntime['agent'],
-    AgentRuntime['config']
+    AgentRuntime['agent']
   >
 > {
   // Require HTTP extension - runtime must have handlers
@@ -124,14 +123,12 @@ export async function createAgentApp(
   const result: CreateAgentAppReturn<
     Hono,
     AgentRuntime,
-    AgentRuntime['agent'],
-    AgentRuntime['config']
+    AgentRuntime['agent']
   > = {
     app,
     runtime,
     agent: runtime.agent,
     addEntrypoint,
-    config: runtime.config,
   };
   return result;
 }

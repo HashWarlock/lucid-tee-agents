@@ -4,7 +4,6 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
 
 import { createAgentApp } from '@lucid-agents/hono';
-import { configureAgentKit, getAgentKitConfig } from '@lucid-agents/core';
 import {
   AgentRuntime,
   MemoryStorageAdapter,
@@ -212,15 +211,6 @@ async function main() {
   const agentServer = createAgentServer(agentPort);
   const authServer = createMockAuthApi(authPort);
 
-  configureAgentKit({
-    payments: {
-      facilitatorUrl: 'https://facilitator.daydreams.systems',
-      payTo: '0x0000000000000000000000000000000000000000',
-      network: 'base-sepolia',
-      defaultPrice: '500',
-    },
-  });
-
   const wallet: AgentRuntimeWallet = {
     signer: {
       async signChallenge(challenge) {
@@ -285,7 +275,6 @@ async function main() {
   await delay(1_200);
   await runtime.ensureAccessToken();
 
-  console.log('[runtime-demo] resolved config', getAgentKitConfig());
   console.log('[runtime-demo] runtime config', config);
 
   await runtime.shutdown();

@@ -21,7 +21,7 @@ export function payments(options?: {
   return {
     name: 'payments',
     build(ctx: BuildContext): { payments?: PaymentsRuntime } {
-      paymentsRuntime = createPaymentsRuntime(options?.config, ctx.config);
+      paymentsRuntime = createPaymentsRuntime(options?.config);
       return { payments: paymentsRuntime };
     },
     onEntrypointAdded(entrypoint: EntrypointDef, runtime: AgentRuntime) {

@@ -13,8 +13,8 @@ import type {
   LocalWalletOptions,
   LucidWalletOptions,
   WalletConnector,
+  WalletsConfig,
 } from '@lucid-agents/types/wallets';
-import type { AgentKitConfig } from '@lucid-agents/types/core';
 
 export const createAgentWallet = (
   options: AgentWalletFactoryOptions
@@ -88,18 +88,16 @@ export type WalletsRuntime = {
 } | undefined;
 
 export function createWalletsRuntime(
-  config: AgentKitConfig
+  config: WalletsConfig | undefined
 ): WalletsRuntime {
-  if (!config.wallets) {
+  if (!config) {
     return undefined;
   }
 
   return {
-    agent: config.wallets.agent
-      ? createAgentWallet(config.wallets.agent)
-      : undefined,
-    developer: config.wallets.developer
-      ? createAgentWallet(config.wallets.developer)
+    agent: config.agent ? createAgentWallet(config.agent) : undefined,
+    developer: config.developer
+      ? createAgentWallet(config.developer)
       : undefined,
   };
 }

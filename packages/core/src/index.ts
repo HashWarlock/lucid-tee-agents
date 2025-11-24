@@ -3,13 +3,6 @@ export {
   type AxLLMClientOptions,
   createAxLLMClient,
 } from './axllm';
-export {
-  configureAgentKit,
-  getActiveInstanceConfig,
-  getAgentKitConfig,
-  resetAgentKitConfigForTesting,
-  setActiveInstanceConfig,
-} from './config/config';
 export { AgentCore, createAgentCore } from './core/agent';
 export type { Network } from './core/types';
 export { AgentBuilder } from './extensions/builder';

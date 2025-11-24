@@ -39,8 +39,7 @@ export async function createAgentApp(
 ): Promise<CreateAgentAppReturn<
   Express,
   AgentRuntime,
-  AgentRuntime['agent'],
-  AgentRuntime['config']
+  AgentRuntime['agent']
 >> {
 
   // Require HTTP extension - runtime must have handlers
@@ -126,12 +125,10 @@ export async function createAgentApp(
     runtime,
     agent: runtime.agent,
     addEntrypoint,
-    config: runtime.config,
   } as CreateAgentAppReturn<
     Express,
     AgentRuntime,
-    AgentRuntime['agent'],
-    AgentRuntime['config']
+    AgentRuntime['agent']
   >;
 }
 

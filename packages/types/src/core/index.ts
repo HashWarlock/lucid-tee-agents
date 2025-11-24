@@ -11,13 +11,12 @@ import type {
   StreamResult,
   AgentHttpHandlers,
 } from '../http';
-import type { EntrypointPrice, PaymentsRuntime } from '../payments';
 import type {
-  WalletsConfig,
-  AgentWalletHandle,
-  WalletsRuntime,
-} from '../wallets';
-import type { PaymentsConfig } from '../payments';
+  EntrypointPrice,
+  PaymentsConfig,
+  PaymentsRuntime,
+} from '../payments';
+import type { AgentWalletHandle, WalletsRuntime } from '../wallets';
 import type { A2ARuntime } from '../a2a';
 import type { AP2Runtime } from '../ap2';
 
@@ -109,15 +108,6 @@ export type EntrypointDef<
 };
 
 /**
- * Configuration for the agent kit runtime.
- * Combines configuration blocks from various extensions (payments, wallets, etc.).
- */
-export type AgentKitConfig = {
-  payments?: PaymentsConfig;
-  wallets?: WalletsConfig;
-};
-
-/**
  * Configuration for an agent instance, including metadata, payments, and wallets.
  */
 export type AgentConfig = {
@@ -166,7 +156,6 @@ export type AgentRuntime = {
    * inferred when used with the actual runtime implementation.
    */
   agent: any;
-  config: AgentKitConfig;
   wallets?: WalletsRuntime;
   payments?: PaymentsRuntime;
   a2a?: A2ARuntime;
@@ -187,13 +176,11 @@ export type CreateAgentAppReturn<
   TApp = unknown,
   TRuntime = any,
   TAgent = any,
-  TConfig = any,
 > = {
   app: TApp;
   runtime: TRuntime;
   agent: TAgent;
   addEntrypoint: (def: EntrypointDef) => void;
-  config: TConfig;
 };
 
 /**
@@ -201,7 +188,6 @@ export type CreateAgentAppReturn<
  */
 export type BuildContext = {
   meta: AgentMeta;
-  config: AgentKitConfig;
   runtime: Partial<AgentRuntime>;
 };
 

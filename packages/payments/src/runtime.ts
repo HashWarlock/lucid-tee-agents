@@ -36,7 +36,6 @@ export type RuntimePaymentOptions = {
   runtime?: AgentRuntime;
   /**
    * Optional override for the network used to infer the payment chain.
-   * Defaults to `getAgentKitConfig().payments.network`.
    */
   network?: string;
   /**

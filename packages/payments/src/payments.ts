@@ -6,7 +6,6 @@ import type {
   PaymentRequirement,
   RuntimePaymentRequirement,
 } from '@lucid-agents/types/payments';
-import type { AgentKitConfig } from '@lucid-agents/types/core';
 import { resolvePrice } from './pricing';
 
 /**
@@ -151,13 +150,10 @@ export const paymentRequiredResponse = (
 };
 
 export function createPaymentsRuntime(
-  paymentsOption: PaymentsConfig | false | undefined,
-  agentConfig: AgentKitConfig
+  paymentsOption: PaymentsConfig | false | undefined
 ): import('@lucid-agents/types/payments').PaymentsRuntime | undefined {
   const config: PaymentsConfig | undefined =
-    paymentsOption === false
-      ? undefined
-      : (paymentsOption ?? agentConfig.payments);
+    paymentsOption === false ? undefined : paymentsOption;
 
   if (!config) {
     return undefined;

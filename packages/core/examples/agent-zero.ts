@@ -1,8 +1,9 @@
-import { z } from 'zod';
-import { createAgentApp } from '@lucid-agents/hono';
-import { AgentKitConfig, createAxLLMClient } from '@lucid-agents/core';
-import { paymentsFromEnv } from '@lucid-agents/payments';
 import { flow } from '@ax-llm/ax';
+import { createAxLLMClient } from '@lucid-agents/core';
+import { createAgentApp } from '@lucid-agents/hono';
+import { paymentsFromEnv } from '@lucid-agents/payments';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
+import { z } from 'zod';
 
 /**
  * Agent Zero now runs a lightweight quiz arcade. Players register for a session,
@@ -160,11 +161,9 @@ const hintFlow = flow<
       : undefined,
   }));
 
-const config: AgentKitConfig = {
-  payments: {
-    payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
-    network: 'base',
-  },
+const paymentsConfig: PaymentsConfig = {
+  payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+  network: 'base',
 };
 
 const { app, addEntrypoint } = createAgentApp(
@@ -178,14 +177,7 @@ const { app, addEntrypoint } = createAgentApp(
     type: 'website',
   },
   {
-    config,
-    payments: {
-      register: false,
-      question: true,
-      answer: true,
-      hint: true,
-      leaderboard: false,
-    },
+    payments: paymentsConfig,
     trust: {
       trustModels: ['arcade-fair-play'],
     },
