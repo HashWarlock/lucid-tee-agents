@@ -1,7 +1,8 @@
 import { flow } from '@ax-llm/ax';
-import { createAxLLMClient } from '@lucid-agents/core';
+import { createAgent, createAxLLMClient } from '@lucid-agents/core';
 import { createAgentApp } from '@lucid-agents/hono';
-import { paymentsFromEnv } from '@lucid-agents/payments';
+import { http } from '@lucid-agents/http';
+import { payments, paymentsFromEnv } from '@lucid-agents/payments';
 import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { z } from 'zod';
 
@@ -163,26 +164,25 @@ const hintFlow = flow<
 
 const paymentsConfig: PaymentsConfig = {
   payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+  facilitatorUrl: (process.env.FACILITATOR_URL ??
+    'https://facilitator.daydreams.systems') as `${string}://${string}`,
   network: 'base',
 };
 
-const { app, addEntrypoint } = createAgentApp(
-  {
-    name: 'Agent Zero Arcade',
-    version: '1.0.0',
-    description:
-      'A playful quiz agent where GPT runs the arcade, awards ARC tokens, and celebrates streaks.',
-    image: 'https://agent-zero-arcade.example.com/og-image.png',
-    url: 'https://agent-zero-arcade.example.com',
-    type: 'website',
-  },
-  {
-    payments: paymentsConfig,
-    trust: {
-      trustModels: ['arcade-fair-play'],
-    },
-  }
-);
+const agent = await createAgent({
+  name: 'Agent Zero Arcade',
+  version: '1.0.0',
+  description:
+    'A playful quiz agent where GPT runs the arcade, awards ARC tokens, and celebrates streaks.',
+  image: 'https://agent-zero-arcade.example.com/og-image.png',
+  url: 'https://agent-zero-arcade.example.com',
+  type: 'website',
+})
+  .use(http())
+  .use(payments({ config: paymentsConfig }))
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 const difficultyEnum = z.enum(['easy', 'medium', 'hard']);
 
@@ -569,7 +569,7 @@ function sessionQuestionToPayload(question: ActiveQuestion) {
 
 function maybeCreatePayout(balance: number) {
   if (balance < PAYOUT_THRESHOLD) return undefined;
-  const payments = paymentsFromEnv(config.payments);
+  const payments = paymentsFromEnv();
   if (!payments) {
     return {
       threshold: PAYOUT_THRESHOLD,
@@ -938,11 +938,13 @@ addEntrypoint({
 
 const port = Number(process.env.PORT ?? 8787);
 
-const server = Bun.serve({
-  port,
-  fetch: app.fetch,
-});
+if (typeof Bun !== 'undefined') {
+  const server = Bun.serve({
+    port,
+    fetch: app.fetch,
+  });
 
-console.log(
-  `🎯 Agent Zero Arcade ready at https://${server.hostname}:${server.port}/entrypoints/register/invoke`
-);
+  console.log(
+    `🎯 Agent Zero Arcade ready at https://${server.hostname}:${server.port}/entrypoints/register/invoke`
+  );
+}

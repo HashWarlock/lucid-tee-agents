@@ -1,8 +1,10 @@
-import { z } from 'zod';
-import { createAgentApp } from '@lucid-agents/hono';
-import { createAxLLMClient } from '@lucid-agents/core';
-import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { flow } from '@ax-llm/ax';
+import { createAgent, createAxLLMClient } from '@lucid-agents/core';
+import { createAgentApp } from '@lucid-agents/hono';
+import { http } from '@lucid-agents/http';
+import { payments } from '@lucid-agents/payments';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
+import { z } from 'zod';
 
 /**
  * This example shows how to combine `createAxLLMClient` with a small AxFlow
@@ -55,23 +57,30 @@ const brainstormingFlow = flow<{ topic: string }>()
       : [],
   }));
 
+// Use URL to validate and normalize, then get href string
+import type { Resource } from 'x402/types';
+
+const facilitatorUrlString =
+  process.env.FACILITATOR_URL ?? 'https://facilitator.daydreams.systems';
+const facilitatorUrl = new URL(facilitatorUrlString).href as Resource;
+
 const paymentsConfig: PaymentsConfig = {
   payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+  facilitatorUrl: facilitatorUrl,
   network: 'base',
-  defaultPrice: process.env.DEFAULT_PRICE ?? '0.03',
 };
 
-const { app, addEntrypoint } = createAgentApp(
-  {
-    name: 'ax-flow-agent',
-    version: '0.0.1',
-    description:
-      'Demonstrates driving an AxFlow pipeline through createAxLLMClient.',
-  },
-  {
-    payments: paymentsConfig,
-  }
-);
+const agent = await createAgent({
+  name: 'ax-flow-agent',
+  version: '0.0.1',
+  description:
+    'Demonstrates driving an AxFlow pipeline through createAxLLMClient.',
+})
+  .use(http())
+  .use(payments({ config: paymentsConfig }))
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 addEntrypoint({
   key: 'brainstorm',

@@ -1,14 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { z } from 'zod';
-
+import { createAgent } from '@lucid-agents/core';
 import { createAgentApp } from '@lucid-agents/hono';
+import { http } from '@lucid-agents/http';
 import {
   AgentRuntime,
-  MemoryStorageAdapter,
   type AgentRuntimeWallet,
+  MemoryStorageAdapter,
 } from '@lucid-dreams/agent-auth';
+import { z } from 'zod';
 
 type ServerHandle = {
   stop: () => void;
@@ -22,17 +23,23 @@ const scopes = (process.env.SCOPES ?? 'agents.read')
   .map(scope => scope.trim())
   .filter(Boolean);
 
-function createAgentServer(port: number): ServerHandle {
-  const { app, addEntrypoint } = createAgentApp({
+async function createAgentServer(port: number): Promise<ServerHandle> {
+  // Create runtime first, then pass to createAgentApp
+  const runtime = await createAgent({
     name: 'runtime-demo',
     version: '0.1.0',
     description: 'Echo entrypoint to exercise AgentRuntime calls',
-  });
+  })
+    .use(http())
+    .build();
+
+  const { app, addEntrypoint } = await createAgentApp(runtime);
 
   addEntrypoint({
     key: 'echo',
     description: 'Echo the provided text',
     input: z.object({ text: z.string() }),
+    output: z.object({ text: z.string() }),
     async handler({ input }) {
       const text = String(input.text ?? '');
       return {
@@ -90,7 +97,7 @@ function createMockAuthApi(port: number): ServerHandle {
       ) {
         const challengeId = `challenge_${randomUUID()}`;
         lastChallengeId = challengeId;
-        const body = await request.json();
+        const body = (await request.json()) as { credential_id?: string };
         if (body.credential_id !== credentialId) {
           return new Response(JSON.stringify({ error: 'invalid credential' }), {
             status: 400,
@@ -122,7 +129,10 @@ function createMockAuthApi(port: number): ServerHandle {
         request.method === 'POST' &&
         url.pathname === `/v1/auth/agents/${agentRef}/exchange`
       ) {
-        const body = await request.json();
+        const body = (await request.json()) as {
+          challenge_id?: string;
+          signature?: string;
+        };
         if (!lastChallengeId || body.challenge_id !== lastChallengeId) {
           return new Response(JSON.stringify({ error: 'unknown challenge' }), {
             status: 400,
@@ -147,7 +157,7 @@ function createMockAuthApi(port: number): ServerHandle {
         request.method === 'POST' &&
         url.pathname === `/v1/auth/agents/${agentRef}/refresh`
       ) {
-        const body = await request.json();
+        const body = (await request.json()) as { refresh_token?: string };
         if (body.refresh_token !== currentRefreshToken) {
           return new Response(
             JSON.stringify({ error: 'invalid refresh token' }),
@@ -208,7 +218,7 @@ async function main() {
   const agentPort = Number(process.env.AGENT_PORT ?? 8789);
   const authPort = Number(process.env.AUTH_PORT ?? 8790);
 
-  const agentServer = createAgentServer(agentPort);
+  const agentServer = await createAgentServer(agentPort);
   const authServer = createMockAuthApi(authPort);
 
   const wallet: AgentRuntimeWallet = {

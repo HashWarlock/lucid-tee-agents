@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { EntrypointDef } from './entrypoint';
 
 /**
@@ -15,6 +16,10 @@ export type CreateAgentAppReturn<
   app: TApp;
   runtime: TRuntime;
   agent: TAgent;
-  addEntrypoint: (def: EntrypointDef) => void;
+  addEntrypoint: <
+    TInput extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
+    TOutput extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
+  >(
+    def: EntrypointDef<TInput, TOutput>
+  ) => void;
 };
-

@@ -19,13 +19,12 @@
  * 2. Run: bun run examples/full-integration.ts
  */
 
-import { z } from 'zod';
-import { createAgentApp } from '@lucid-agents/hono';
+import { a2a, waitForTask } from '@lucid-agents/a2a';
 import { createAgent } from '@lucid-agents/core';
+import { createAgentApp } from '@lucid-agents/hono';
 import { http } from '@lucid-agents/http';
-import { a2a } from '@lucid-agents/a2a';
-import { waitForTask } from '../src/index';
 import type { A2ARuntime } from '@lucid-agents/types/a2a';
+import { z } from 'zod';
 
 // Helper to start a simple HTTP server
 async function startServer(
@@ -191,7 +190,11 @@ async function main() {
       );
       console.log(`[Agent 2] Created task ${taskId} for Agent 1`);
 
-      const task = await waitForTask(a2a2ForAgent1.client, agent1Card, taskId);
+      const task = await waitForTask<{ text: string }>(
+        a2a2ForAgent1.client,
+        agent1Card,
+        taskId
+      );
 
       if (task.status === 'failed') {
         throw new Error(
@@ -202,8 +205,13 @@ async function main() {
       console.log(
         `[Agent 2] Got result from Agent 1: ${JSON.stringify(task.result?.output)}`
       );
+
+      // Validate output from remote agent with Zod schema (runtime safety)
+      const outputSchema = z.object({ text: z.string() });
+      const validatedOutput = outputSchema.parse(task.result?.output);
+
       return {
-        output: task.result?.output,
+        output: validatedOutput,
         usage: task.result?.usage,
       };
     },
@@ -230,7 +238,11 @@ async function main() {
       );
       console.log(`[Agent 2] Created task ${taskId} for Agent 1`);
 
-      const task = await waitForTask(a2a2ForAgent1.client, agent1Card, taskId);
+      const task = await waitForTask<{ result: number }>(
+        a2a2ForAgent1.client,
+        agent1Card,
+        taskId
+      );
 
       if (task.status === 'failed') {
         throw new Error(
@@ -241,8 +253,13 @@ async function main() {
       console.log(
         `[Agent 2] Got result from Agent 1: ${JSON.stringify(task.result?.output)}`
       );
+
+      // Validate output from remote agent with Zod schema (runtime safety)
+      const outputSchema = z.object({ result: z.number() });
+      const validatedOutput = outputSchema.parse(task.result?.output);
+
       return {
-        output: task.result?.output,
+        output: validatedOutput,
         usage: task.result?.usage,
       };
     },
@@ -285,9 +302,6 @@ async function main() {
       throw new Error('A2A runtime not available on Agent 1');
     }
 
-    const card1 = a2a1.buildCard(server1.url);
-    const card2 = a2a2ForAgent1.buildCard(server2.url);
-
     // Build full manifest from runtime (includes AP2 if payments enabled)
     const manifest1 = runtime1.manifest.build(server1.url);
     const manifest2 = runtime2.manifest.build(server2.url);
@@ -301,7 +315,8 @@ async function main() {
     // Show AP2 extensions if present
     if (manifest1.capabilities?.extensions?.length) {
       const ap2Ext = manifest1.capabilities.extensions.find(
-        ext => 'uri' in ext && ext.uri?.includes('ap2')
+        ext =>
+          'uri' in ext && typeof ext.uri === 'string' && ext.uri.includes('ap2')
       );
       if (ap2Ext && 'params' in ap2Ext) {
         const roles = (ap2Ext.params as { roles?: string[] })?.roles || [];
@@ -319,7 +334,8 @@ async function main() {
     // Show AP2 extensions if present
     if (manifest2.capabilities?.extensions?.length) {
       const ap2Ext = manifest2.capabilities.extensions.find(
-        ext => 'uri' in ext && ext.uri?.includes('ap2')
+        ext =>
+          'uri' in ext && typeof ext.uri === 'string' && ext.uri.includes('ap2')
       );
       if (ap2Ext && 'params' in ap2Ext) {
         const roles = (ap2Ext.params as { roles?: string[] })?.roles || [];
@@ -346,7 +362,8 @@ async function main() {
     // Show AP2 extensions if present (from fetched card)
     if (fetchedCard2.capabilities?.extensions?.length) {
       const ap2Ext = fetchedCard2.capabilities.extensions.find(
-        ext => 'uri' in ext && ext.uri?.includes('ap2')
+        ext =>
+          'uri' in ext && typeof ext.uri === 'string' && ext.uri.includes('ap2')
       );
       if (ap2Ext && 'params' in ap2Ext) {
         const roles = (ap2Ext.params as { roles?: string[] })?.roles || [];
@@ -546,7 +563,7 @@ async function main() {
       console.log(
         `  Task cancelled: ${cancelledTask.taskId} (status: ${cancelledTask.status})`
       );
-    } catch (error) {
+    } catch {
       const task = await a2a3.client.getTask(
         fetchedCard2,
         slowTaskResponse.taskId

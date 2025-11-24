@@ -117,8 +117,8 @@ export type AgentCardWithEntrypoints = AgentCard & {
 
 export type TaskStatus = 'running' | 'completed' | 'failed' | 'cancelled';
 
-export type TaskResult = {
-  output: unknown;
+export type TaskResult<TOutput = unknown> = {
+  output: TOutput;
   usage?: Usage;
   model?: string;
 };
@@ -129,10 +129,10 @@ export type TaskError = {
   details?: unknown;
 };
 
-export type Task = {
+export type Task<TOutput = unknown> = {
   taskId: string;
   status: TaskStatus;
-  result?: TaskResult;
+  result?: TaskResult<TOutput>;
   error?: TaskError;
   contextId?: string;
   createdAt: string;

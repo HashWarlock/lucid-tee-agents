@@ -1,14 +1,17 @@
-import { z } from 'zod';
-import { createAgentApp } from '@lucid-agents/hono';
-import { createAxLLMClient } from '@lucid-agents/core';
-import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { flow } from '@ax-llm/ax';
+import { createAgent, createAxLLMClient } from '@lucid-agents/core';
+import { createAgentApp } from '@lucid-agents/hono';
+import { http } from '@lucid-agents/http';
+import { payments } from '@lucid-agents/payments';
+import type { FetchFunction } from '@lucid-agents/types/http';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import {
   createSigner,
   decodeXPaymentResponse,
-  wrapFetchWithPayment,
   type Hex,
+  wrapFetchWithPayment,
 } from 'x402-fetch';
+import { z } from 'zod';
 
 /**
  * This example shows how to combine `createAxLLMClient` with a small AxFlow
@@ -58,10 +61,7 @@ if (!privateKey) {
   );
 }
 
-type FetchWithPayment = (
-  input: RequestInfo,
-  init?: RequestInit
-) => Promise<Response>;
+type FetchWithPayment = FetchFunction;
 
 let fetchWithPaymentInstance: FetchWithPayment | null = null;
 let fetchWithPaymentPromise: Promise<FetchWithPayment> | null = null;
@@ -230,18 +230,21 @@ const siteSummaryFlow = flow<{
 
 const paymentsConfig: PaymentsConfig = {
   payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+  facilitatorUrl: (process.env.FACILITATOR_URL ??
+    'https://facilitator.daydreams.systems') as `${string}://${string}`,
   network: 'base',
-  defaultPrice: process.env.DEFAULT_PRICE ?? '0.03',
 };
 
-const { app, addEntrypoint } = createAgentApp(
-  {
-    name: 'Summarisation Agent',
-    version: '0.0.1',
-    description: 'Summarises a URL with Firecrawl.',
-  },
-  { payments: paymentsConfig }
-);
+const agent = await createAgent({
+  name: 'Summarisation Agent',
+  version: '0.0.1',
+  description: 'Summarises a URL with Firecrawl.',
+})
+  .use(http())
+  .use(payments({ config: paymentsConfig }))
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 addEntrypoint({
   key: 'summarize-url',

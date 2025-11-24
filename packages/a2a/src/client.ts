@@ -461,17 +461,17 @@ export async function cancelTask(
  * Helper function to wait for a task to complete.
  * Polls task status until it's completed or failed.
  */
-export async function waitForTask(
+export async function waitForTask<TOutput = unknown>(
   client: A2AClient,
   card: AgentCardWithEntrypoints,
   taskId: string,
   maxWaitMs = 30000
-): Promise<Task> {
+): Promise<Task<TOutput>> {
   const startTime = Date.now();
   while (Date.now() - startTime < maxWaitMs) {
     const task = await client.getTask(card, taskId);
     if (task.status === 'completed' || task.status === 'failed') {
-      return task;
+      return task as Task<TOutput>;
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   }

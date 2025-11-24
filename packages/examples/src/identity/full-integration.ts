@@ -18,10 +18,8 @@
  */
 
 import { createAgent } from '@lucid-agents/core';
-import { wallets } from '@lucid-agents/wallet';
-import { walletsFromEnv } from '@lucid-agents/wallet';
-
-import { createAgentIdentity } from '../src/index';
+import { createAgentIdentity } from '@lucid-agents/identity';
+import { wallets, walletsFromEnv } from '@lucid-agents/wallet';
 
 async function main() {
   console.log('='.repeat(80));
@@ -60,7 +58,7 @@ async function main() {
 
   console.log(`\n1.1: Registering Agent 1 (${agent1Domain})...`);
   const identity1 = await createAgentIdentity({
-    runtime,
+    runtime: agent,
     domain: agent1Domain,
     autoRegister: true,
     trustModels: ['feedback', 'inference-validation'],
@@ -82,7 +80,7 @@ async function main() {
   // Register Agent 2 (client/validator agent) - same wallet, different domain
   console.log(`\n1.2: Registering Agent 2 (${agent2Domain})...`);
   const identity2 = await createAgentIdentity({
-    runtime,
+    runtime: agent,
     domain: agent2Domain,
     autoRegister: true,
     trustModels: ['feedback', 'inference-validation'],
@@ -267,9 +265,7 @@ async function main() {
     console.log(`   Request URI: ${requestUri}`);
 
     // Compute request hash to check status
-    const { hashValidationRequest } = await import(
-      '../src/registries/signatures.js'
-    );
+    const { hashValidationRequest } = await import('@lucid-agents/identity');
     requestHash = hashValidationRequest(requestUri);
 
     // 3.4: Get validation status (read)
@@ -380,9 +376,8 @@ async function main() {
 
   // 4.3: Give feedback (write) - Agent 2 gives feedback to Agent 1
   console.log('\n4.3: Giving feedback (Agent 2 -> Agent 1)...');
-  let feedbackEntry:
-    | import('../src/registries/reputation.js').FeedbackEntry
-    | null = null;
+  let feedbackEntry: import('@lucid-agents/identity').FeedbackEntry | null =
+    null;
   let lastIndex = 0n;
   let clientAddress: `0x${string}` | null = null;
 

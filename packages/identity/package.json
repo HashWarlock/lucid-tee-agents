@@ -22,7 +22,6 @@
   "sideEffects": false,
   "files": [
     "dist",
-    "examples",
     "README.md"
   ],
   "publishConfig": {

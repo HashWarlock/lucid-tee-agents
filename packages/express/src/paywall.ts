@@ -54,9 +54,17 @@ export function withPayments({
       ? { output: responseSchema }
       : undefined;
 
+  // Normalize facilitatorUrl to string (handles URL objects)
+  const facilitatorUrlString =
+    typeof payments.facilitatorUrl === 'string'
+      ? payments.facilitatorUrl
+      : payments.facilitatorUrl instanceof URL
+        ? payments.facilitatorUrl.href
+        : String(payments.facilitatorUrl);
+
   const resolvedFacilitator: FacilitatorConfig =
     facilitator ??
-    ({ url: payments.facilitatorUrl } satisfies FacilitatorConfig);
+    ({ url: facilitatorUrlString } satisfies FacilitatorConfig);
 
   const postRoute = {
     price,

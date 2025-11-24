@@ -67,7 +67,6 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "@lucid-agents/eslint-config": "workspace:*",
-    "@lucid-agents/prettier-config": "workspace:*",
-    "@lucid-agents/hono": "workspace:*"
+    "@lucid-agents/prettier-config": "workspace:*"
   }
 }

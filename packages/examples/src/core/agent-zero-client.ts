@@ -1,10 +1,12 @@
-import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
+import readline from 'node:readline/promises';
+
+import type { FetchFunction } from '@lucid-agents/types/http';
 import {
-  wrapFetchWithPayment,
   createSigner,
   decodeXPaymentResponse,
   type Hex,
+  wrapFetchWithPayment,
 } from 'x402-fetch';
 
 type EntrypointKey =
@@ -15,7 +17,7 @@ type EntrypointKey =
   | 'leaderboard';
 
 const BASE_URL = process.env.AGENT_ZERO_URL ?? 'https://localhost:8787';
-let fetchClient: typeof fetch = fetch;
+let fetchClient: FetchFunction = fetch;
 
 async function callEntrypoint<TInput, TResult>(
   key: EntrypointKey,
