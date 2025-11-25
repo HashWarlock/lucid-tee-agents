@@ -166,10 +166,20 @@ export class LocalEoaWalletConnector implements WalletConnector {
 
   private resolveChainConfig(): Chain {
     const rpcUrl = this.resolveRpcUrl();
+    const isLocalhostFallback = rpcUrl === 'http://localhost:8545' && !this.walletClientConfig?.rpcUrl;
+    
     const chainId =
       this.walletClientConfig?.chainId ??
       this.extractChainIdFromMetadata() ??
-      1;
+      (isLocalhostFallback ? 31337 : null);
+    
+    if (chainId === null) {
+      throw new Error(
+        'chainId must be explicitly provided in walletClient config when using a custom RPC URL. ' +
+        'For localhost development, chainId defaults to 31337 (Hardhat/Anvil standard).'
+      );
+    }
+    
     const chainName =
       this.walletClientConfig?.chainName ??
       this.metadata?.chain ??

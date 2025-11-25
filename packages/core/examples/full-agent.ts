@@ -325,13 +325,13 @@ async function main() {
     });
 
     const port = Number(process.env.PORT ?? 8787);
-    const agentOrigin = process.env.AGENT_ORIGIN ?? `https://localhost:${port}`;
+    const agentOrigin = process.env.AGENT_ORIGIN ?? `http://localhost:${port}`;
     if (typeof Bun !== 'undefined') {
       Bun.serve({
         port,
         fetch: app.fetch,
       });
-      console.log(`[examples] agent listening on https://localhost:${port}`);
+      console.log(`[examples] agent listening on http://localhost:${port}`);
     } else {
       console.warn(
         '[examples] Bun runtime not detected; skipping server start'

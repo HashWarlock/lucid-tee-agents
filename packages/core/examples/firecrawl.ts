@@ -45,7 +45,9 @@ if (!axClient.isConfigured()) {
 const firecrawlSearchEndpoint =
   process.env.FIRECRAWL_SEARCH_URL ??
   'https://api.firecrawl.dev/v1/x402/search';
-const firecrawlAuthToken = 'fc-c1e849dd9b9644f3ac8b2b6419ea793b';
+const firecrawlAuthToken = process.env.FIRECRAWL_AUTH_TOKEN as
+  | string
+  | undefined;
 const privateKey = process.env.PRIVATE_KEY as Hex | undefined;
 const x402Network = (process.env.X402_NETWORK ?? 'base') as Parameters<
   typeof createSigner
@@ -54,6 +56,12 @@ const x402Network = (process.env.X402_NETWORK ?? 'base') as Parameters<
 if (!privateKey) {
   console.warn(
     '[examples] Firecrawl pay-per-use search disabled — set PRIVATE_KEY to enable x402 payments.'
+  );
+}
+
+if (!firecrawlAuthToken) {
+  console.warn(
+    '[examples] FIRECRAWL_AUTH_TOKEN not set — Firecrawl API requests may fail without authentication.'
   );
 }
 

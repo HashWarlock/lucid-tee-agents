@@ -207,7 +207,7 @@ const signer = await connector.getSigner?.();
 // Use LocalEoaSigner for x402, identity, or custom signing.
 ```
 
-Local EOA connectors automatically synthesize a viem wallet client the first time `getWalletClient()` is called. Configure `walletClient` (chain ID, RPC URL, currency metadata) on the wallet definition to point at the correct network. If omitted, the connector falls back to a localhost RPC target (http://localhost:8545) and a generic chain profile.
+Local EOA connectors automatically synthesize a viem wallet client the first time `getWalletClient()` is called. Configure `walletClient` (chain ID, RPC URL, currency metadata) on the wallet definition to point at the correct network. If omitted, the connector falls back to a localhost RPC target (`http://localhost:8545`) with chain ID 31337 (Hardhat/Anvil standard) and a generic chain profile. When using a custom RPC URL, `chainId` must be explicitly provided.
 
 ## Generic Signer Connector
 
@@ -377,5 +377,5 @@ const agent = await createAgent({ ... })
 ## See Also
 
 - [Wallet Types](../types/src/wallets/index.ts) - Type definitions
-- [Connector Implementations](./src/connectors/) - Connector source code
+- [Connector Implementations](../packages/wallet/src/connectors/) - Connector source code
 - [thirdweb Documentation](https://portal.thirdweb.com/wallets) - thirdweb wallet docs

@@ -95,6 +95,12 @@ function parseLocalWalletFromEnv(
 ): LocalWalletOptions | undefined {
   const privateKey = env.AGENT_WALLET_PRIVATE_KEY;
   if (!privateKey) {
+    if (env.AGENT_WALLET_TYPE?.toLowerCase() === 'local') {
+      throw new Error(
+        'AGENT_WALLET_PRIVATE_KEY environment variable is required when AGENT_WALLET_TYPE=local. ' +
+          'Set AGENT_WALLET_PRIVATE_KEY to your wallet private key (0x-prefixed hex string).'
+      );
+    }
     return undefined;
   }
 
@@ -114,11 +120,23 @@ function parseThirdwebWalletFromEnv(
   const chainIdStr = env.AGENT_WALLET_CHAIN_ID ?? '84532';
 
   if (!secretKey) {
+    if (env.AGENT_WALLET_TYPE?.toLowerCase() === 'thirdweb') {
+      throw new Error(
+        'AGENT_WALLET_SECRET_KEY environment variable is required when AGENT_WALLET_TYPE=thirdweb. ' +
+          'Set AGENT_WALLET_SECRET_KEY to your thirdweb Engine secret key.'
+      );
+    }
     return undefined;
   }
 
   const chainId = parseInt(chainIdStr, 10);
   if (isNaN(chainId)) {
+    if (env.AGENT_WALLET_TYPE?.toLowerCase() === 'thirdweb') {
+      throw new Error(
+        `Invalid AGENT_WALLET_CHAIN_ID: "${chainIdStr}". Must be a valid integer. ` +
+          'Set AGENT_WALLET_CHAIN_ID to a valid chain ID (e.g., 84532 for Base Sepolia).'
+      );
+    }
     return undefined;
   }
 
@@ -141,6 +159,25 @@ function parseLucidWalletFromEnv(
     env.LUCID_API_URL ??
     undefined;
   const agentRef = env.AGENT_WALLET_AGENT_REF;
+
+  if (env.AGENT_WALLET_TYPE?.toLowerCase() === 'lucid') {
+    const missing: string[] = [];
+    if (!baseUrl) {
+      missing.push(
+        'AGENT_WALLET_BASE_URL (or LUCID_BASE_URL or LUCID_API_URL)'
+      );
+    }
+    if (!agentRef) {
+      missing.push('AGENT_WALLET_AGENT_REF');
+    }
+    if (missing.length > 0) {
+      throw new Error(
+        `Missing required environment variables for Lucid wallet: ${missing.join(', ')}. ` +
+          'Set these environment variables to configure the Lucid wallet connector.'
+      );
+    }
+  }
+
   if (!baseUrl || !agentRef) {
     return undefined;
   }
