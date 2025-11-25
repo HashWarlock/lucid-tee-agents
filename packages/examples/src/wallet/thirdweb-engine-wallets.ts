@@ -139,7 +139,11 @@ async function main() {
 
     // Prepare the ERC20 transfer transaction
     const amount = parseUnits(AMOUNT, USDC_DECIMALS);
-    const data = encodeFunctionData({
+
+    const txHash = await walletClient.writeContract({
+      account: walletClient.account,
+      chain: walletClient.chain,
+      address: USDC_ADDRESS,
       abi: erc20Abi,
       functionName: 'transfer',
       args: [RECEIVER_WALLET, amount],
