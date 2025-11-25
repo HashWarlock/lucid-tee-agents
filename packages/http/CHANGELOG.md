@@ -1,5 +1,12 @@
 # @lucid-agents/http
 
+## 1.9.1
+
+### Patch Changes
+
+- @lucid-agents/core@1.9.1
+- @lucid-agents/payments@1.9.1
+
 ## 1.9.0
 
 ### Minor Changes
