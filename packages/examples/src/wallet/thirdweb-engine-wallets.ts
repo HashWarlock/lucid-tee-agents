@@ -19,7 +19,6 @@ import { baseSepolia as thirdwebBaseSepolia } from 'thirdweb/chains';
 import type { WalletClient } from 'viem';
 import {
   createPublicClient,
-  encodeFunctionData,
   erc20Abi,
   http as viemHttp,
   parseUnits,
@@ -147,16 +146,6 @@ async function main() {
       abi: erc20Abi,
       functionName: 'transfer',
       args: [RECEIVER_WALLET, amount],
-    });
-
-    const txHash = await walletClient.writeContract({
-      account: walletClient.account,
-      chain: walletClient.chain,
-      address: USDC_ADDRESS,
-      abi: erc20Abi,
-      functionName: 'transfer',
-      args: [RECEIVER_WALLET, amount],
-      data,
     });
 
     console.log('Transaction submitted!');
