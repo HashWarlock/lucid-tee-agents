@@ -11,6 +11,7 @@ export type SolanaAddress = string;
  */
 export type PaymentsConfig = {
   payTo: `0x${string}` | SolanaAddress;
+  facilitatorUrl: Resource;
   network: Network;
 };
 

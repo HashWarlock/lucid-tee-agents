@@ -37,8 +37,12 @@ export function withPayments({
   if (!price) return false;
   if (!payments.payTo) return false;
 
-  const requestSchema = entrypoint.input ? z.toJSONSchema(entrypoint.input) : undefined;
-  const responseSchema = entrypoint.output ? z.toJSONSchema(entrypoint.output) : undefined;
+  const requestSchema = entrypoint.input
+    ? z.toJSONSchema(entrypoint.input)
+    : undefined;
+  const responseSchema = entrypoint.output
+    ? z.toJSONSchema(entrypoint.output)
+    : undefined;
 
   const description =
     entrypoint.description ??
@@ -54,17 +58,9 @@ export function withPayments({
       ? { output: responseSchema }
       : undefined;
 
-  // Normalize facilitatorUrl to string (handles URL objects)
-  const facilitatorUrlString =
-    typeof payments.facilitatorUrl === 'string'
-      ? payments.facilitatorUrl
-      : payments.facilitatorUrl instanceof URL
-        ? payments.facilitatorUrl.href
-        : String(payments.facilitatorUrl);
-
   const resolvedFacilitator: FacilitatorConfig =
     facilitator ??
-    ({ url: facilitatorUrlString } satisfies FacilitatorConfig);
+    ({ url: payments.facilitatorUrl } satisfies FacilitatorConfig);
 
   const postRoute = {
     price,

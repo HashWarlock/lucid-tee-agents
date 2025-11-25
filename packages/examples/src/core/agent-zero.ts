@@ -690,36 +690,38 @@ addEntrypoint({
   },
 });
 
+const answerOutputSchema = z.object({
+  verdict: z.enum(['correct', 'partial', 'wrong', 'expired']),
+  explanation: z.string(),
+  earned_arc: z.number(),
+  balance: z.number(),
+  streak: z.number(),
+  normalized_expected: z.string().optional(),
+  fun_fact: z.string().optional(),
+  payout: z
+    .object({
+      threshold: z.number(),
+      status: z.enum(['ready', 'pending-config']),
+      payments: z
+        .object({
+          facilitatorUrl: z.string(),
+          payTo: z.string(),
+          network: z.string(),
+          defaultPrice: z.string().optional(),
+        })
+        .optional(),
+      message: z.string().optional(),
+    })
+    .optional(),
+  next_hint_cost: z.number(),
+});
+
 addEntrypoint({
   key: 'answer',
   description:
     'Submit an answer. Tokens are awarded based on correctness, difficulty, and streak.',
   input: answerInputSchema,
-  output: z.object({
-    verdict: z.enum(['correct', 'partial', 'wrong', 'expired']),
-    explanation: z.string(),
-    earned_arc: z.number(),
-    balance: z.number(),
-    streak: z.number(),
-    normalized_expected: z.string().optional(),
-    fun_fact: z.string().optional(),
-    payout: z
-      .object({
-        threshold: z.number(),
-        status: z.enum(['ready', 'pending-config']),
-        payments: z
-          .object({
-            facilitatorUrl: z.string(),
-            payTo: z.string(),
-            network: z.string(),
-            defaultPrice: z.string().optional(),
-          })
-          .optional(),
-        message: z.string().optional(),
-      })
-      .optional(),
-    next_hint_cost: z.number(),
-  }),
+  output: answerOutputSchema,
   async handler(ctx) {
     const payload = answerInputSchema.parse(ctx.input);
     const session = ensureSession(payload.session_token);
@@ -728,7 +730,7 @@ addEntrypoint({
     if (Date.now() > question.expiresAt) {
       const historyEntry = handleExpiration(session, question);
       return {
-        output: {
+        output: answerOutputSchema.parse({
           verdict: 'expired',
           explanation:
             "Time's up! ARC slipped away. Request a new question to jump back in.",
@@ -739,7 +741,7 @@ addEntrypoint({
           fun_fact: question.funFact,
           payout: maybeCreatePayout(session.balance),
           next_hint_cost: HINT_COST,
-        },
+        }),
       };
     }
 
@@ -799,7 +801,7 @@ addEntrypoint({
     session.lastQuestion = undefined;
 
     return {
-      output: {
+      output: answerOutputSchema.parse({
         verdict: judge.verdict,
         explanation: judge.rationale,
         earned_arc: earned,
@@ -809,7 +811,7 @@ addEntrypoint({
         fun_fact: judge.verdict === 'correct' ? question.funFact : undefined,
         payout,
         next_hint_cost: HINT_COST,
-      },
+      }),
     };
   },
 });
