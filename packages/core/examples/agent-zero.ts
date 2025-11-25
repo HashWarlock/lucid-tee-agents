@@ -952,5 +952,5 @@ const server = Bun.serve({
 });
 
 console.log(
-  `🎯 Agent Zero Arcade ready at https://${server.hostname}:${server.port}/entrypoints/register/invoke`
+  `🎯 Agent Zero Arcade ready at http://${server.hostname}:${server.port}/entrypoints/register/invoke`
 );
