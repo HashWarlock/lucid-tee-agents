@@ -6,10 +6,9 @@ import { payments } from '@lucid-agents/payments';
 import type { AgentRuntime } from '@lucid-agents/types/core';
 import type { PaymentsConfig } from '@lucid-agents/types/payments';
 import { wallets } from '@lucid-agents/wallet';
-import { afterEach, describe, expect, it, mock } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
 import { z } from 'zod';
 
-import { resetAgentKitConfigForTesting } from '../config/config';
 import { createAgent } from '../runtime';
 
 const makeRuntimeStub = (): {
@@ -65,10 +64,6 @@ const paymentRequirements = {
 };
 
 describe('runtime payments', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('wraps fetch with x402 handling using the runtime wallet', async () => {
     const { runtime, calls } = makeRuntimeStub();
 
@@ -161,10 +156,6 @@ describe('runtime payments', () => {
 });
 
 describe('runtime Solana payments', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('accepts Solana network configuration', async () => {
     const solanaNetworks = ['solana', 'solana-devnet'] as const;
 
@@ -206,10 +197,6 @@ describe('runtime Solana payments', () => {
 });
 
 describe('createAgent payments activation', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   const paymentsConfig: PaymentsConfig = {
     payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
     facilitatorUrl: 'https://facilitator.test',
@@ -224,7 +211,6 @@ describe('createAgent payments activation', () => {
     expect(agent.payments).toBeDefined();
     expect(agent.payments?.config).toBeDefined();
     expect(agent.payments?.isActive).toBe(false);
-    expect(agent.agent.config.payments).toBeUndefined();
   });
 
   it('activates payments when priced entrypoint is added', async () => {
@@ -247,8 +233,6 @@ describe('createAgent payments activation', () => {
     expect(agent.payments?.config).toBeDefined();
     expect(agent.payments?.isActive).toBe(true);
     expect(agent.payments?.config.payTo).toBe(paymentsConfig.payTo);
-    expect(agent.agent.config.payments).toBeDefined();
-    expect(agent.agent.config.payments?.payTo).toBe(paymentsConfig.payTo);
   });
 
   it('does not activate payments when non-priced entrypoint is added', async () => {
@@ -268,7 +252,6 @@ describe('createAgent payments activation', () => {
 
     expect(agent.payments).toBeDefined();
     expect(agent.payments?.isActive).toBe(false);
-    expect(agent.agent.config.payments).toBeUndefined();
   });
 
   it('activates payments when entrypoint with price object is added', async () => {
@@ -287,7 +270,6 @@ describe('createAgent payments activation', () => {
     expect(agent.payments).toBeDefined();
     expect(agent.payments?.config).toBeDefined();
     expect(agent.payments?.isActive).toBe(true);
-    expect(agent.agent.config.payments).toBeDefined();
   });
 
   it('keeps payments active after first activation', async () => {
@@ -316,7 +298,6 @@ describe('createAgent payments activation', () => {
 
     expect(agent.payments?.config).toBe(paymentsAfterFirst);
     expect(agent.payments?.isActive).toBe(true);
-    expect(agent.agent.config.payments).toBe(paymentsAfterFirst);
 
     agent.entrypoints.add({
       key: 'paid2',
@@ -344,7 +325,6 @@ describe('createAgent payments activation', () => {
     });
 
     expect(agent.payments).toBeUndefined();
-    expect(agent.agent.config.payments).toBeUndefined();
   });
 
   it('activates payments when entrypoints provided in options', async () => {
@@ -362,7 +342,6 @@ describe('createAgent payments activation', () => {
     expect(agent.payments).toBeDefined();
     expect(agent.payments?.config).toBeDefined();
     expect(agent.payments?.isActive).toBe(true);
-    expect(agent.agent.config.payments).toBeDefined();
   });
 
   it('does not activate payments when entrypoints without prices provided in options', async () => {
@@ -378,10 +357,9 @@ describe('createAgent payments activation', () => {
 
     expect(agent.payments).toBeDefined();
     expect(agent.payments?.isActive).toBe(false);
-    expect(agent.agent.config.payments).toBeUndefined();
   });
 
-  it('syncs runtime.payments?.config and agent.config.payments', async () => {
+  it('activates payments when entrypoint with price is added', async () => {
     const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(payments({ config: paymentsConfig }))
       .build();
@@ -395,19 +373,13 @@ describe('createAgent payments activation', () => {
     });
 
     const runtimePayments = agent.payments?.config;
-    const agentPayments = agent.agent.config.payments;
 
-    expect(runtimePayments).toBe(agentPayments);
+    expect(runtimePayments).toBeDefined();
     expect(runtimePayments?.payTo).toBe(paymentsConfig.payTo);
-    expect(agentPayments?.payTo).toBe(paymentsConfig.payTo);
   });
 });
 
 describe('createAgentRuntime wallets', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('creates wallets from config when provided', async () => {
     const agent = await createAgent({ name: 'test', version: '1.0.0' })
       .use(
@@ -480,40 +452,7 @@ describe('createAgentRuntime wallets', () => {
   });
 });
 
-describe('createAgentRuntime config resolution', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
-  it('uses provided config', async () => {
-    const customConfig = {
-      payments: {
-        payTo: '0xCustomAddress',
-        facilitatorUrl: 'https://custom-facilitator.test' as const,
-        network: 'base-sepolia' as const,
-      },
-    };
-
-    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build(
-      customConfig
-    );
-
-    expect(agent.config.payments?.payTo).toBe('0xCustomAddress');
-  });
-
-  it('returns resolved config', async () => {
-    const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
-
-    expect(agent.config).toBeDefined();
-    expect(typeof agent.config).toBe('object');
-  });
-});
-
 describe('createAgentRuntime entrypoints', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('initializes entrypoints from options', async () => {
     const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.addEntrypoint({
@@ -586,10 +525,6 @@ describe('createAgentRuntime entrypoints', () => {
 });
 
 describe('createAgentRuntime manifest', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('builds manifest with correct origin', async () => {
     const agent = await createAgent({ name: 'test', version: '1.0.0' }).build();
 
@@ -662,10 +597,6 @@ describe('createAgentRuntime manifest', () => {
 });
 
 describe('createAgentRuntime integration', () => {
-  afterEach(() => {
-    resetAgentKitConfigForTesting();
-  });
-
   it('handles full flow: config → wallets → payments → entrypoints → manifest', async () => {
     const builder = createAgent({ name: 'test', version: '1.0.0' });
     builder.use(

@@ -1,13 +1,18 @@
-import { z } from 'zod';
-import { createAgentApp } from '@lucid-agents/hono';
-import { AgentKitConfig, createAxLLMClient } from '@lucid-agents/core';
 import { flow } from '@ax-llm/ax';
+import { createAgent, createAxLLMClient } from '@lucid-agents/core';
+import { createAgentApp } from '@lucid-agents/hono';
+import { http } from '@lucid-agents/http';
+import { payments } from '@lucid-agents/payments';
+import type { FetchFunction } from '@lucid-agents/types/http';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
+import type { Resource } from 'x402/types';
 import {
   createSigner,
   decodeXPaymentResponse,
-  wrapFetchWithPayment,
   type Hex,
+  wrapFetchWithPayment,
 } from 'x402-fetch';
+import { z } from 'zod';
 
 /**
  * This example shows how to combine `createAxLLMClient` with a small AxFlow
@@ -57,10 +62,7 @@ if (!privateKey) {
   );
 }
 
-type FetchWithPayment = (
-  input: RequestInfo,
-  init?: RequestInit
-) => Promise<Response>;
+type FetchWithPayment = FetchFunction;
 
 let fetchWithPaymentInstance: FetchWithPayment | null = null;
 let fetchWithPaymentPromise: Promise<FetchWithPayment> | null = null;
@@ -227,22 +229,27 @@ const siteSummaryFlow = flow<{
     sourceUrl: state.sourceUrl ?? state.url,
   }));
 
-const config: AgentKitConfig = {
-  payments: {
-    payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
-    network: 'base',
-    defaultPrice: process.env.DEFAULT_PRICE ?? '0.03',
-  },
+// Use URL to validate and normalize, then get href string
+const facilitatorUrlString =
+  process.env.FACILITATOR_URL ?? 'https://facilitator.daydreams.systems';
+const facilitatorUrl = new URL(facilitatorUrlString).href as Resource;
+
+const paymentsConfig: PaymentsConfig = {
+  payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+  facilitatorUrl: facilitatorUrl,
+  network: 'base',
 };
 
-const { app, addEntrypoint } = createAgentApp(
-  {
-    name: 'Summarisation Agent',
-    version: '0.0.1',
-    description: 'Summarises a URL with Firecrawl.',
-  },
-  { config }
-);
+const agent = await createAgent({
+  name: 'Summarisation Agent',
+  version: '0.0.1',
+  description: 'Summarises a URL with Firecrawl.',
+})
+  .use(http())
+  .use(payments({ config: paymentsConfig }))
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 addEntrypoint({
   key: 'summarize-url',
@@ -335,5 +342,5 @@ const server = Bun.serve({
 });
 
 console.log(
-  `🚀 Agent ready at https://${server.hostname}:${server.port}/.well-known/agent.json`
+  `🚀 Agent ready at http://${server.hostname}:${server.port}/.well-known/agent.json`
 );

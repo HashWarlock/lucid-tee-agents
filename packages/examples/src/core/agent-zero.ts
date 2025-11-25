@@ -1,8 +1,10 @@
-import { z } from 'zod';
-import { createAgentApp } from '@lucid-agents/hono';
-import { AgentKitConfig, createAxLLMClient } from '@lucid-agents/core';
-import { paymentsFromEnv } from '@lucid-agents/payments';
 import { flow } from '@ax-llm/ax';
+import { createAgent, createAxLLMClient } from '@lucid-agents/core';
+import { createAgentApp } from '@lucid-agents/hono';
+import { http } from '@lucid-agents/http';
+import { payments, paymentsFromEnv } from '@lucid-agents/payments';
+import type { PaymentsConfig } from '@lucid-agents/types/payments';
+import { z } from 'zod';
 
 /**
  * Agent Zero now runs a lightweight quiz arcade. Players register for a session,
@@ -160,37 +162,27 @@ const hintFlow = flow<
       : undefined,
   }));
 
-const config: AgentKitConfig = {
-  payments: {
-    payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
-    network: 'base',
-  },
+const paymentsConfig: PaymentsConfig = {
+  payTo: '0xb308ed39d67D0d4BAe5BC2FAEF60c66BBb6AE429',
+  facilitatorUrl: (process.env.FACILITATOR_URL ??
+    'https://facilitator.daydreams.systems') as `${string}://${string}`,
+  network: 'base',
 };
 
-const { app, addEntrypoint } = createAgentApp(
-  {
-    name: 'Agent Zero Arcade',
-    version: '1.0.0',
-    description:
-      'A playful quiz agent where GPT runs the arcade, awards ARC tokens, and celebrates streaks.',
-    image: 'https://agent-zero-arcade.example.com/og-image.png',
-    url: 'https://agent-zero-arcade.example.com',
-    type: 'website',
-  },
-  {
-    config,
-    payments: {
-      register: false,
-      question: true,
-      answer: true,
-      hint: true,
-      leaderboard: false,
-    },
-    trust: {
-      trustModels: ['arcade-fair-play'],
-    },
-  }
-);
+const agent = await createAgent({
+  name: 'Agent Zero Arcade',
+  version: '1.0.0',
+  description:
+    'A playful quiz agent where GPT runs the arcade, awards ARC tokens, and celebrates streaks.',
+  image: 'https://agent-zero-arcade.example.com/og-image.png',
+  url: 'https://agent-zero-arcade.example.com',
+  type: 'website',
+})
+  .use(http())
+  .use(payments({ config: paymentsConfig }))
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
 
 const difficultyEnum = z.enum(['easy', 'medium', 'hard']);
 
@@ -577,7 +569,7 @@ function sessionQuestionToPayload(question: ActiveQuestion) {
 
 function maybeCreatePayout(balance: number) {
   if (balance < PAYOUT_THRESHOLD) return undefined;
-  const payments = paymentsFromEnv(config.payments);
+  const payments = paymentsFromEnv();
   if (!payments) {
     return {
       threshold: PAYOUT_THRESHOLD,
@@ -698,36 +690,38 @@ addEntrypoint({
   },
 });
 
+const answerOutputSchema = z.object({
+  verdict: z.enum(['correct', 'partial', 'wrong', 'expired']),
+  explanation: z.string(),
+  earned_arc: z.number(),
+  balance: z.number(),
+  streak: z.number(),
+  normalized_expected: z.string().optional(),
+  fun_fact: z.string().optional(),
+  payout: z
+    .object({
+      threshold: z.number(),
+      status: z.enum(['ready', 'pending-config']),
+      payments: z
+        .object({
+          facilitatorUrl: z.string(),
+          payTo: z.string(),
+          network: z.string(),
+          defaultPrice: z.string().optional(),
+        })
+        .optional(),
+      message: z.string().optional(),
+    })
+    .optional(),
+  next_hint_cost: z.number(),
+});
+
 addEntrypoint({
   key: 'answer',
   description:
     'Submit an answer. Tokens are awarded based on correctness, difficulty, and streak.',
   input: answerInputSchema,
-  output: z.object({
-    verdict: z.enum(['correct', 'partial', 'wrong', 'expired']),
-    explanation: z.string(),
-    earned_arc: z.number(),
-    balance: z.number(),
-    streak: z.number(),
-    normalized_expected: z.string().optional(),
-    fun_fact: z.string().optional(),
-    payout: z
-      .object({
-        threshold: z.number(),
-        status: z.enum(['ready', 'pending-config']),
-        payments: z
-          .object({
-            facilitatorUrl: z.string(),
-            payTo: z.string(),
-            network: z.string(),
-            defaultPrice: z.string().optional(),
-          })
-          .optional(),
-        message: z.string().optional(),
-      })
-      .optional(),
-    next_hint_cost: z.number(),
-  }),
+  output: answerOutputSchema,
   async handler(ctx) {
     const payload = answerInputSchema.parse(ctx.input);
     const session = ensureSession(payload.session_token);
@@ -736,7 +730,7 @@ addEntrypoint({
     if (Date.now() > question.expiresAt) {
       const historyEntry = handleExpiration(session, question);
       return {
-        output: {
+        output: answerOutputSchema.parse({
           verdict: 'expired',
           explanation:
             "Time's up! ARC slipped away. Request a new question to jump back in.",
@@ -747,7 +741,7 @@ addEntrypoint({
           fun_fact: question.funFact,
           payout: maybeCreatePayout(session.balance),
           next_hint_cost: HINT_COST,
-        },
+        }),
       };
     }
 
@@ -807,7 +801,7 @@ addEntrypoint({
     session.lastQuestion = undefined;
 
     return {
-      output: {
+      output: answerOutputSchema.parse({
         verdict: judge.verdict,
         explanation: judge.rationale,
         earned_arc: earned,
@@ -817,7 +811,7 @@ addEntrypoint({
         fun_fact: judge.verdict === 'correct' ? question.funFact : undefined,
         payout,
         next_hint_cost: HINT_COST,
-      },
+      }),
     };
   },
 });
@@ -946,11 +940,13 @@ addEntrypoint({
 
 const port = Number(process.env.PORT ?? 8787);
 
-const server = Bun.serve({
-  port,
-  fetch: app.fetch,
-});
+if (typeof Bun !== 'undefined') {
+  const server = Bun.serve({
+    port,
+    fetch: app.fetch,
+  });
 
-console.log(
-  `🎯 Agent Zero Arcade ready at https://${server.hostname}:${server.port}/entrypoints/register/invoke`
-);
+  console.log(
+    `🎯 Agent Zero Arcade ready at http://${server.hostname}:${server.port}/entrypoints/register/invoke`
+  );
+}

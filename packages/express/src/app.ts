@@ -8,6 +8,7 @@ import express, {
 import { Readable } from 'node:stream';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import type { TLSSocket } from 'node:tls';
+import { z } from 'zod';
 import type { EntrypointDef } from '@lucid-agents/core';
 import type {
   AgentRuntime,
@@ -39,8 +40,7 @@ export async function createAgentApp(
 ): Promise<CreateAgentAppReturn<
   Express,
   AgentRuntime,
-  AgentRuntime['agent'],
-  AgentRuntime['config']
+  AgentRuntime['agent']
 >> {
 
   // Require HTTP extension - runtime must have handlers
@@ -104,7 +104,10 @@ export async function createAgentApp(
     });
   }
 
-  const addEntrypoint = (def: EntrypointDef) => {
+  const addEntrypoint = <
+    TInput extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
+    TOutput extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
+  >(def: EntrypointDef<TInput, TOutput>): void => {
     runtime.entrypoints.add(def);
     const entrypoint = runtime
       .entrypoints.snapshot()
@@ -126,12 +129,10 @@ export async function createAgentApp(
     runtime,
     agent: runtime.agent,
     addEntrypoint,
-    config: runtime.config,
   } as CreateAgentAppReturn<
     Express,
     AgentRuntime,
-    AgentRuntime['agent'],
-    AgentRuntime['config']
+    AgentRuntime['agent']
   >;
 }
 

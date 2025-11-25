@@ -72,10 +72,14 @@ function buildEntrypointRoutes({
 
     if (!network || !price) continue;
 
-    const requestSchema = entrypoint.input ? z.toJSONSchema(entrypoint.input) : undefined;
+    const requestSchema = entrypoint.input
+      ? z.toJSONSchema(entrypoint.input)
+      : undefined;
     const responseSchema =
       kind === 'invoke'
-        ? (entrypoint.output ? z.toJSONSchema(entrypoint.output) : undefined)
+        ? entrypoint.output
+          ? z.toJSONSchema(entrypoint.output)
+          : undefined
         : undefined;
     const description =
       entrypoint.description ??

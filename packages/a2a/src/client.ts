@@ -1,7 +1,5 @@
-import type {
-  AgentCardWithEntrypoints,
-  FetchFunction,
-} from '@lucid-agents/types/core';
+import type { FetchFunction } from '@lucid-agents/types/http';
+import type { AgentCard } from '@lucid-agents/types/a2a';
 import type {
   InvokeAgentResult,
   StreamEmit,
@@ -22,7 +20,7 @@ import { fetchAgentCard, findSkill } from './card';
  * Invokes an agent's entrypoint using the Agent Card.
  */
 export async function invokeAgent(
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   skillId: string,
   input: unknown,
   fetchImpl?: FetchFunction
@@ -64,7 +62,7 @@ export async function invokeAgent(
  * Streams from an agent's entrypoint using the Agent Card.
  */
 export async function streamAgent(
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   skillId: string,
   input: unknown,
   emit: StreamEmit,
@@ -174,7 +172,7 @@ export async function fetchAndInvoke(
  * Creates a task and returns the taskId immediately.
  */
 export async function sendMessage(
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   skillId: string,
   input: unknown,
   fetchImpl?: FetchFunction,
@@ -232,7 +230,7 @@ export async function sendMessage(
  * Gets the status of a task.
  */
 export async function getTask(
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   taskId: string,
   fetchImpl?: FetchFunction
 ): Promise<Task> {
@@ -267,7 +265,7 @@ export async function getTask(
  * Subscribes to task updates via SSE.
  */
 export async function subscribeTask(
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   taskId: string,
   emit: (chunk: TaskUpdateEvent) => Promise<void> | void,
   fetchImpl?: FetchFunction
@@ -387,7 +385,7 @@ export async function fetchAndSendMessage(
  * Lists tasks with optional filtering.
  */
 export async function listTasks(
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   filters?: ListTasksRequest,
   fetchImpl?: FetchFunction
 ): Promise<ListTasksResponse> {
@@ -430,7 +428,7 @@ export async function listTasks(
  * Cancels a running task.
  */
 export async function cancelTask(
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   taskId: string,
   fetchImpl?: FetchFunction
 ): Promise<Task> {
@@ -463,17 +461,17 @@ export async function cancelTask(
  * Helper function to wait for a task to complete.
  * Polls task status until it's completed or failed.
  */
-export async function waitForTask(
+export async function waitForTask<TOutput = unknown>(
   client: A2AClient,
-  card: AgentCardWithEntrypoints,
+  card: AgentCard,
   taskId: string,
   maxWaitMs = 30000
-): Promise<Task> {
+): Promise<Task<TOutput>> {
   const startTime = Date.now();
   while (Date.now() - startTime < maxWaitMs) {
     const task = await client.getTask(card, taskId);
     if (task.status === 'completed' || task.status === 'failed') {
-      return task;
+      return task as Task<TOutput>;
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   }

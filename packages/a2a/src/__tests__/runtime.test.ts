@@ -25,7 +25,6 @@ describe('createA2ARuntime', () => {
         },
       ],
     },
-    config: {},
     entrypoints: {
       add: () => {},
       list: () => [],

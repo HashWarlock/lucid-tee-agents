@@ -9,8 +9,7 @@ export function wallets(
   return {
     name: 'wallets',
     build(ctx: BuildContext): { wallets?: WalletsRuntime } {
-      const config = options?.config ?? ctx.config.wallets;
-      const walletsRuntime = createWalletsRuntime({ wallets: config });
+      const walletsRuntime = createWalletsRuntime(options?.config);
       return { wallets: walletsRuntime };
     },
   };

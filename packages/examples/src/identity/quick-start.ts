@@ -9,16 +9,28 @@
  * 2. Run: bun run examples/quick-start.ts
  */
 
-import { createAgentIdentity, registerAgent } from '../src/index.js';
+import { createAgent } from '@lucid-agents/core';
+import { createAgentIdentity, registerAgent } from '@lucid-agents/identity';
+import { wallets, walletsFromEnv } from '@lucid-agents/wallet';
 
 async function main() {
   console.log('ERC-8004 Agent Identity - Quick Start\n');
+
+  // Create a minimal runtime with wallet configuration
+  const agent = await createAgent({
+    name: 'quick-start-agent',
+    version: '1.0.0',
+    description: 'Quick start example agent',
+  })
+    .use(wallets({ config: walletsFromEnv() }))
+    .build();
 
   // Example 1: Simple registration with env vars
   console.log('Example 1: Simple Registration');
   console.log('Using environment variables for configuration...\n');
 
   const identity = await createAgentIdentity({
+    runtime: agent,
     autoRegister: true,
   });
 
@@ -43,6 +55,7 @@ async function main() {
   console.log('Forcing registration with registerAgent()...\n');
 
   const registration = await registerAgent({
+    runtime: agent,
     domain: 'my-agent.example.com',
   });
 
@@ -57,6 +70,7 @@ async function main() {
   console.log('Using custom trust models and overrides...\n');
 
   const customIdentity = await createAgentIdentity({
+    runtime: agent,
     domain: 'custom-agent.example.com',
     autoRegister: true,
     trustModels: ['feedback', 'tee-attestation'],

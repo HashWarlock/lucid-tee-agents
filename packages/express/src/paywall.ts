@@ -37,8 +37,12 @@ export function withPayments({
   if (!price) return false;
   if (!payments.payTo) return false;
 
-  const requestSchema = entrypoint.input ? z.toJSONSchema(entrypoint.input) : undefined;
-  const responseSchema = entrypoint.output ? z.toJSONSchema(entrypoint.output) : undefined;
+  const requestSchema = entrypoint.input
+    ? z.toJSONSchema(entrypoint.input)
+    : undefined;
+  const responseSchema = entrypoint.output
+    ? z.toJSONSchema(entrypoint.output)
+    : undefined;
 
   const description =
     entrypoint.description ??

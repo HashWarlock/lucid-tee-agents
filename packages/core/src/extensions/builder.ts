@@ -1,15 +1,15 @@
 import { buildAgentCard } from '@lucid-agents/a2a';
 import type {
   AgentCardWithEntrypoints,
-  AgentKitConfig,
   AgentMeta,
+} from '@lucid-agents/types/a2a';
+import type {
   AgentRuntime,
   BuildContext,
   EntrypointDef,
   Extension,
 } from '@lucid-agents/types/core';
 
-import { getAgentKitConfig, setActiveInstanceConfig } from '../config/config';
 import { createAgentCore } from '../core/agent';
 import type { Network } from '../core/types';
 
@@ -29,15 +29,10 @@ export class AgentBuilder {
     return this;
   }
 
-  async build(config?: AgentKitConfig): Promise<AgentRuntime> {
-    setActiveInstanceConfig(config);
-    const resolvedConfig = getAgentKitConfig(config);
-
+  async build(): Promise<AgentRuntime> {
     // Create base agent core
     const agent = createAgentCore({
       meta: this.meta,
-      wallets: undefined,
-      payments: undefined,
     });
 
     const manifestCache = new Map<string, AgentCardWithEntrypoints>();
@@ -45,7 +40,6 @@ export class AgentBuilder {
     // Build context for extensions
     const buildContext: BuildContext = {
       meta: this.meta,
-      config: resolvedConfig,
       runtime: {},
     };
 
@@ -108,7 +102,6 @@ export class AgentBuilder {
     const runtime = {
       ...mergedRuntime,
       agent,
-      config: resolvedConfig,
       entrypoints: {
         add: (def: EntrypointDef) => {
           if (!def.key) throw new Error('entrypoint.key required');

@@ -80,9 +80,10 @@ async function buildPackages() {
     return;
   }
 
-  // Build order: base packages → extensions → core → adapters → CLI
+  // Build order: base packages → extensions → core → adapters → CLI → examples
   // Extensions (wallet, payments, identity, a2a, ap2, http) only depend on types.
   // Core depends on all extensions, so extensions must build first.
+  // Examples are full integration tests that depend on all packages.
   const preferredOrder = [
     // Base layer - no internal dependencies
     '@lucid-agents/types',
@@ -105,6 +106,9 @@ async function buildPackages() {
 
     // CLI - no dependencies on other packages
     '@lucid-agents/cli',
+
+    // Examples - full integration tests, depends on all packages
+    '@lucid-agents/examples',
   ];
 
   const packagesByName = new Map(packages.map(pkg => [pkg.name, pkg]));

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import type {
   EntrypointDef,
   CreateAgentAppReturn,
@@ -26,8 +27,7 @@ export async function createAgentApp(
   CreateAgentAppReturn<
     Hono,
     AgentRuntime,
-    AgentRuntime['agent'],
-    AgentRuntime['config']
+    AgentRuntime['agent']
   >
 > {
   // Require HTTP extension - runtime must have handlers
@@ -103,7 +103,10 @@ export async function createAgentApp(
     app.get('/', c => c.text('Landing disabled', 404));
   }
 
-  const addEntrypoint = (def: EntrypointDef) => {
+  const addEntrypoint = <
+    TInput extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
+    TOutput extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
+  >(def: EntrypointDef<TInput, TOutput>): void => {
     runtime.entrypoints.add(def);
     const entrypoint = runtime.entrypoints
       .snapshot()
@@ -124,14 +127,12 @@ export async function createAgentApp(
   const result: CreateAgentAppReturn<
     Hono,
     AgentRuntime,
-    AgentRuntime['agent'],
-    AgentRuntime['config']
+    AgentRuntime['agent']
   > = {
     app,
     runtime,
     agent: runtime.agent,
     addEntrypoint,
-    config: runtime.config,
   };
   return result;
 }

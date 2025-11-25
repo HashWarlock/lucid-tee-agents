@@ -58,7 +58,6 @@ const makeMockRuntime = (
       getEntrypoint: (key: string) => entrypoints.get(key),
       invoke: invokeFn || defaultInvoke,
     },
-    config: {},
     entrypoints: {
       add: (def: EntrypointDef) => {
         entrypoints.set(def.key, def);
@@ -93,7 +92,6 @@ const makeTestHandlers = (
   const ext = http();
   ext.build({
     meta,
-    config: {},
     runtime: {},
   });
   const runtime = makeMockRuntime(entrypoints, invokeFn);

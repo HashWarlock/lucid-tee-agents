@@ -2,12 +2,24 @@
  * Test script to verify all three registry clients are created and accessible
  */
 
-import { createAgentIdentity } from '../src/init';
+import { createAgent } from '@lucid-agents/core';
+import { createAgentIdentity } from '@lucid-agents/identity';
+import { wallets, walletsFromEnv } from '@lucid-agents/wallet';
 
 async function main() {
   console.log('Testing ERC-8004 Registry Clients Integration\n');
 
+  // Create a minimal runtime with wallet configuration
+  const agent = await createAgent({
+    name: 'test-clients-agent',
+    version: '1.0.0',
+    description: 'Test registry clients',
+  })
+    .use(wallets({ config: walletsFromEnv() }))
+    .build();
+
   const identity = await createAgentIdentity({
+    runtime: agent,
     autoRegister: true,
     env: process.env as Record<string, string | undefined>,
   });
@@ -33,7 +45,10 @@ async function main() {
     console.log(
       '   - Methods:',
       Object.keys(identity.clients.reputation).filter(
-        k => typeof (identity.clients!.reputation as any)[k] === 'function'
+        k =>
+          typeof (identity.clients!.reputation as Record<string, unknown>)[
+            k
+          ] === 'function'
       )
     );
 
@@ -44,7 +59,10 @@ async function main() {
     console.log(
       '   - Methods:',
       Object.keys(identity.clients.validation).filter(
-        k => typeof (identity.clients!.validation as any)[k] === 'function'
+        k =>
+          typeof (identity.clients!.validation as Record<string, unknown>)[
+            k
+          ] === 'function'
       )
     );
 
@@ -59,7 +77,7 @@ async function main() {
         console.log('\nReputation Summary:');
         console.log('   - Total Feedback:', summary.count.toString());
         console.log('   - Average Score:', summary.averageScore);
-      } catch (error) {
+      } catch {
         console.log(
           '\nReputation Summary: No feedback yet (this is normal for new agents)'
         );

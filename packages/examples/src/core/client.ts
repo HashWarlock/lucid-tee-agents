@@ -1,9 +1,4 @@
-import {
-  decodeXPaymentResponse,
-  wrapFetchWithPayment,
-  createSigner,
-  type Hex,
-} from 'x402-fetch';
+import { createSigner, type Hex, wrapFetchWithPayment } from 'x402-fetch';
 
 const privateKey = process.env.PRIVATE_KEY as Hex | string;
 
@@ -36,6 +31,7 @@ async function once(): Promise<void> {
 }
 
 async function mainLoop(): Promise<void> {
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       await once();
